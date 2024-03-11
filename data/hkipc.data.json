@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "ip": "192.168.1.101",
+    "username": "admin",
+    "password": "123456",
+    "ptzChannel": "1",
+    "streamChannel": "101",
+    "liveUrl": "http://<mediamtx-hls>:8888/101/index.m3u8"
+  },
+  {
+    "id": "2",
+    "ip": "192.168.1.102",
+    "username": "admin",
+    "password": "123456",
+    "ptzChannel": "1",
+    "streamChannel": "102",
+    "liveUrl": "http://<mediamtx-hls>:8888/102/index.m3u8"
+  }
+]
