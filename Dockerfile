@@ -25,7 +25,3 @@ ENV TZ=Asia/Shanghai
 EXPOSE 8080
 
 CMD java -jar -Dfile.encoding=utf-8 --enable-preview ./mariee.jar
-
-# docker build -t mariee-api:latest .
-
-# docker run -d --name mariee-api -p 8080:8080 mariee-api:latest
