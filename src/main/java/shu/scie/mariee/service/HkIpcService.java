@@ -19,7 +19,7 @@ public class HkIpcService {
         this.list = this.getList();
     }
 
-    public HkIpc getById(String id) {
+    public HkIpc getById(Long id) {
         List<HkIpc> list = this.list.stream().filter(i -> id.equals(i.id)).toList();
         if (!list.isEmpty()) {
             return list.getFirst();
@@ -27,7 +27,6 @@ public class HkIpcService {
             return null;
         }
     }
-
 
     private List<HkIpc> getList() {
         try {

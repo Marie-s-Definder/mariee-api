@@ -1,11 +1,13 @@
 package shu.scie.mariee.controller;
 
+import io.micrometer.common.lang.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import shu.scie.mariee.model.ApiResult;
 import shu.scie.mariee.model.HkIpc;
+import shu.scie.mariee.repository.HkIpcRepository;
 import shu.scie.mariee.service.HkIpcService;
 import shu.scie.mariee.service.UtilService;
 
@@ -20,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.List;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -28,14 +31,76 @@ public class HkIpcController {
 
     private final HttpClient httpClient;
     private final HkIpcService hkIpcService;
+    private final HkIpcRepository hkIpcRepository;
 
-    public HkIpcController(HkIpcService hkIpcService) {
+    public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository) {
+        this.hkIpcRepository = hkIpcRepository;
         this.httpClient = UtilService.createHttpClient();
         this.hkIpcService = hkIpcService;
     }
 
+    @PostMapping("/create")
+    public ApiResult<String> create(@RequestBody HkIpc hkIpc) {
+        if(hkIpc.id != null) {
+            return new ApiResult<>(false, "Not valid hkipc record with not null id");
+        }
+
+        try {
+            hkIpcRepository.save(hkIpc);
+        } catch (Exception e) {
+            return new ApiResult<>(false, e.getMessage());
+        }
+        return new ApiResult<>(true, "success create one hkipc record");
+    }
+
+    @DeleteMapping("/delete")
+    public ApiResult<String> delete(@RequestParam String name) {
+        List<HkIpc> hkIpcList = hkIpcRepository.findByName(name);
+        if(hkIpcList.isEmpty()){
+            return new ApiResult<>(true, STR."fail to find hkipc record with name: \{name}");
+        }
+
+        try {
+            hkIpcRepository.deleteById(hkIpcList.getFirst().id);
+            return new ApiResult<>(true, STR."success delete hkipc record by name: \{name} id: \{hkIpcList.getFirst().id}");
+        } catch (Exception e) {
+            return new ApiResult<>(false, e.getMessage());
+        }
+    }
+
+    @PutMapping("/update")
+    public ApiResult<String> insert(@RequestBody HkIpc hkIpc) {
+        if(hkIpc.id == null) {
+            return new ApiResult<>(false, "Not valid hkipc record with empty id");
+        }
+
+        try {
+            boolean hkIpcExisted = hkIpcRepository.existsById(hkIpc.id);
+            if(hkIpcExisted) {
+                hkIpcRepository.save(hkIpc);
+                return new ApiResult<>(true, STR."success update one hkipc record with id: \{hkIpc.id}");
+            }
+            return new ApiResult<>(false, STR."fail to find hkipc record with id \{hkIpc.id}");
+        } catch (Exception e) {
+            return new ApiResult<>(false, e.getMessage());
+        }
+    }
+
+    @GetMapping("/query")
+    public ApiResult<HkIpc> query(@Nullable @RequestParam Long id, @Nullable @RequestParam String name) {
+        if ((id == null) && (name == null || name.isEmpty())) {
+            System.out.println("not valid id and name");
+            return new ApiResult<>(false, null);
+        }
+
+        if (id != null) {
+            return new ApiResult<>(true, hkIpcRepository.findById(id).orElse(null));
+        }
+        return new ApiResult<>(true, hkIpcRepository.findByName(name).getFirst());
+    }
+
     @GetMapping("/liveUrl")
-    public ApiResult<String> pan(@RequestParam String id) {
+    public ApiResult<String> pan(@RequestParam Long id) {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -45,7 +110,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/snapshot")
-    public ApiResult<String> snapshot(@RequestParam String id) {
+    public ApiResult<String> snapshot(@RequestParam Long id) {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -87,7 +152,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/pan")
-    public ApiResult<String> pan(@RequestParam String id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> pan(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -109,7 +174,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/tilt")
-    public ApiResult<String> tilt(@RequestParam String id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> tilt(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -131,7 +196,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/zoom")
-    public ApiResult<String> zoom(@RequestParam String id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> zoom(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -151,7 +216,6 @@ public class HkIpcController {
 
         return new ApiResult<>(true, STR."zoom \{direction}");
     }
-
 
     private String startIpcMove(HkIpc ipc, String action, String direction) {
         if (ipc == null) {

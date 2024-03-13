@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 public class ApiResult<T> {
 
     public boolean ok;
+
     public T data;
 
 }
