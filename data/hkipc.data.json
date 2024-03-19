@@ -1,0 +1,11 @@
+[
+  {
+    "id": "1",
+    "ip": "192.168.110.64",
+    "username": "admin",
+    "password": "xxrxxr715",
+    "ptzChannel": "1",
+    "streamChannel": "101",
+    "liveUrl": "http://192.168.110.31:8888/mariee-101/index.m3u8"
+  }
+]
