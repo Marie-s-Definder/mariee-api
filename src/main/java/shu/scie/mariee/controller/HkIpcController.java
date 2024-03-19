@@ -9,10 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import shu.scie.mariee.model.*;
 import shu.scie.mariee.repository.DataRepository;
 import shu.scie.mariee.repository.HkIpcRepository;
-import shu.scie.mariee.service.DataService;
-import shu.scie.mariee.service.HkIpcService;
-import shu.scie.mariee.service.RobotService;
-import shu.scie.mariee.service.UtilService;
+import shu.scie.mariee.service.*;
 
 import java.io.IOException;
 import java.net.URI;
@@ -41,12 +38,15 @@ public class HkIpcController {
 
     private final DataService dataService;
 
-    public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository, RobotService robotService, DataService dataService) {
+    private final DeviceService deviceService;
+
+    public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository, RobotService robotService, DataService dataService, DeviceService deviceService) {
         this.hkIpcRepository = hkIpcRepository;
         this.httpClient = UtilService.createHttpClient();
         this.hkIpcService = hkIpcService;
         this.robotService = robotService;
         this.dataService = dataService;
+        this.deviceService = deviceService;
     }
 
     @PostMapping("/create")
@@ -109,6 +109,18 @@ public class HkIpcController {
         return new ApiResult<>(true, hkIpcRepository.findByName(name).getFirst());
     }
 
+    @GetMapping("/queryDevice")
+    public ApiResult<List<Device>> queryDevice(@RequestParam("robotId") Long robotId) {
+        try {
+            List<Device> lists = deviceService.getDeviceByRobotId(robotId);
+            System.out.println("queryDevice!");
+            return new ApiResult<>(true,lists);
+        } catch (Exception e) {
+            System.out.println("no device get");
+            return new ApiResult<>(false, null);
+        }
+    }
+
     @GetMapping("/queryAllData")
     public ApiResult<List<Data>> queryAllData(@RequestParam("robotId") Long robotId,
                                               @RequestParam("deviceName") String deviceName,
@@ -138,9 +150,7 @@ public class HkIpcController {
     // 根据楼栋、楼层、页码、每页的数量返回机器人的信息
     @GetMapping("/queryRobot")
     public ApiResult<List<Robot>> queryRobot(@RequestParam("building") String building,
-                                             @RequestParam("room") String room,
-                                             @RequestParam("page") int page,
-                                             @RequestParam("results") int results) {
+                                             @RequestParam("room") String room) {
         try {
             List<Robot> robots = robotService.getRobotsByBuildingAndRoom(building, room);
             System.out.println("queryRobot！");
