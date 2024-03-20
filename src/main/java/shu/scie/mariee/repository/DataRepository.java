@@ -8,8 +8,8 @@ import java.util.Date;
 import java.util.List;
 
 public interface DataRepository extends CrudRepository<Data,Long> {
-    List<Data> findAllByRobotidAndDevicename(Long robotId, String deviceName);
+    List<Data> findAllByRobotidAndDevicenameOrderByDateDesc(Long robotId, String deviceName);
 
-    List<Data> findByDateBetweenAndRobotidAndDevicename(Date startDate, Date endDate, Long robotId, String deviceName);
+    List<Data> findByDateBetweenAndRobotidAndDevicenameOrderByDateDesc(Date startDate, Date endDate, Long robotId, String deviceName);
 
 }

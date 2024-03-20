@@ -21,4 +21,6 @@ public class Device {
     public Long robotid;
 
     public String name;
+
+    public Long status;
 }

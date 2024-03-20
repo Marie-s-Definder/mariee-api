@@ -31,4 +31,6 @@ public class Data {
     public Long status;
 
     public String imgpath;
+
+    public Long getby;
 }

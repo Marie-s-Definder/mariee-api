@@ -21,18 +21,12 @@ public class DataService {
     }
 
     public List<Data> getAllData(Long robotId, String deviceName) {
-        List<Data> lists = dataRepository.findAllByRobotidAndDevicename(robotId, deviceName);
+        List<Data> lists = dataRepository.findAllByRobotidAndDevicenameOrderByDateDesc(robotId, deviceName);
         return lists;
     }
 
     public List<Data> getByDate(Date startTime, Date endTime, Long robotId, String deviceName) {
-        return dataRepository.findByDateBetweenAndRobotidAndDevicename(startTime, endTime, robotId, deviceName);
+        return dataRepository.findByDateBetweenAndRobotidAndDevicenameOrderByDateDesc(startTime, endTime, robotId, deviceName);
     }
-
-//    public List<data> getByTime(Long robotId, String deviceName) {
-//        return dataRepository.findByDateBetweenAndRobotidAndDevicename(new Date(), endTime, robotId, deviceName);
-//    }
-
-
 
 }

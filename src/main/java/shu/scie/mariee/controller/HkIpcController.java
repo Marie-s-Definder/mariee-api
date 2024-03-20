@@ -124,15 +124,10 @@ public class HkIpcController {
     @GetMapping("/queryAllData")
     public ApiResult<List<Data>> queryAllData(@RequestParam("robotId") Long robotId,
                                               @RequestParam("deviceName") String deviceName,
-                                              @Nullable @RequestParam("_24h") Long _24h,
                                               @Nullable @RequestParam("startTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
                                               @Nullable @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime) {
         try {
-            if (_24h != null) {
-                List<Data> dataList = dataService.getByDate(startTime, endTime, robotId, deviceName);
-                System.out.println("queryAllData");
-                return new ApiResult<>(true, dataList);
-            } else if (startTime != null && endTime != null) {
+            if (startTime != null && endTime != null) {
                 List<Data> dataList = dataService.getByDate(startTime, endTime, robotId, deviceName);
                 System.out.println("queryAllData");
                 return new ApiResult<>(true, dataList);
@@ -162,7 +157,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/liveUrl")
-    public ApiResult<String> pan(@RequestParam Long id) {
+    public ApiResult<String> pan(@RequestParam("id") Long id) {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -172,7 +167,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/snapshot")
-    public ApiResult<String> snapshot(@RequestParam Long id) {
+    public ApiResult<String> snapshot(@RequestParam("id") Long id) {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -214,7 +209,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/pan")
-    public ApiResult<String> pan(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> pan(@RequestParam("id") Long id, @RequestParam("direction") String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -236,7 +231,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/tilt")
-    public ApiResult<String> tilt(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> tilt(@RequestParam("id") Long id, @RequestParam("direction") String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -258,7 +253,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/zoom")
-    public ApiResult<String> zoom(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> zoom(@RequestParam("id") Long id, @RequestParam("direction") String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
