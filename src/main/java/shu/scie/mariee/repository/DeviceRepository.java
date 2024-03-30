@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface DeviceRepository extends CrudRepository<Device, Long> {
     List<Device> findAllByRobotid(Long robotId);
+
+    Device findAllById(Long id);
 }

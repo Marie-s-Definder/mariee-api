@@ -16,4 +16,9 @@ public class DeviceService {
     public List<Device> getDeviceByRobotId(Long robotId) {
         return deviceRepository.findAllByRobotid(robotId);
     }
+
+    public Device getDeviceById(Long id) {
+        Device device = deviceRepository.findAllById(id);
+        return device;
+    }
 }

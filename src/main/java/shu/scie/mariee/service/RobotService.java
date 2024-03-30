@@ -16,11 +16,12 @@ public class RobotService {
     }
 
     public List<Robot> getRobotsByBuildingAndRoom(String building, String room) {
-        List<Robot> robots = robotRepository.findAllByBuildingAndRoom(building, room);
+        List<Robot> robots = robotRepository.findAllByBuildingAndRoomOrderById(building, room);
         return robots;
     }
 
     public Long getAllRobotsRows() {
         return robotRepository.count();
     }
+
 }
