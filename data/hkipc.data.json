@@ -9,10 +9,20 @@
     "liveUrl": "http://192.168.110.31:8888/mariee-101/index.m3u8"
   },
   {
-    "id": "2",
+    "id": "3",
     "ip": "192.168.110.65",
     "username": "admin",
     "password": "xxrxxr123",
+    "ptzChannel": "1",
+    "streamChannel": "102",
+    "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8"
+  },
+
+  {
+    "id": "2",
+    "ip": "172.16.104.1",
+    "username": "admin",
+    "password": "Ehooters12345",
     "ptzChannel": "1",
     "streamChannel": "102",
     "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8"
