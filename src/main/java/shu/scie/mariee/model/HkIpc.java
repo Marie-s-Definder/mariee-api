@@ -31,5 +31,9 @@ public class HkIpc {
 
     public String liveUrl;
 
+    public String slide_ip;
+
+    public Long slide_port;
+
 }
 

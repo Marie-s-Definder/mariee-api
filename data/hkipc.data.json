@@ -6,7 +6,9 @@
     "password": "xxrxxr715",
     "ptzChannel": "1",
     "streamChannel": "101",
-    "liveUrl": "http://192.168.110.31:8888/mariee-101/index.m3u8"
+    "liveUrl": "http://192.168.110.31:8888/mariee-101/index.m3u8",
+    "slide_ip": "127.0.0.1",
+    "slide_port": "4196"
   },
   {
     "id": "3",
@@ -15,7 +17,9 @@
     "password": "xxrxxr123",
     "ptzChannel": "1",
     "streamChannel": "102",
-    "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8"
+    "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8",
+    "slide_ip": "127.0.0.1",
+    "slide_port": "4196"
   },
 
   {
@@ -25,6 +29,8 @@
     "password": "Ehooters12345",
     "ptzChannel": "1",
     "streamChannel": "102",
-    "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8"
+    "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8",
+    "slide_ip": "127.0.0.1",
+    "slide_port": "4196"
   }
 ]

@@ -42,6 +42,8 @@ public class AutoService implements Runnable {
 
     private final DeviceService deviceService;
 
+    private TcpClient SlideService;
+
     public AutoService(HkIpcService hkIpcService, Long id, PresetRepository presetRepository,
                        DataInfoRepository dataInfoRepository, DeviceService deviceService) {
         this.hkIpcService = hkIpcService;
@@ -50,6 +52,7 @@ public class AutoService implements Runnable {
         this.presetRepository = presetRepository;
         this.dataInfoRepository = dataInfoRepository;
         this.deviceService = deviceService;
+        this.SlideService = new TcpClient(hkIpcService.getById(id));
     }
 
     @Override
@@ -75,6 +78,9 @@ public class AutoService implements Runnable {
                 dataInfos.add(dataInfo1);
             }
             // go to presets
+
+            SlideService.gotoPresetPoint(preset.slide_preset_id.intValue());
+
             String requestBody = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><AbsoluteHigh>" +
                     "<elevation>"+preset.p+"</elevation><azimuth>"+preset.t+"</azimuth><absoluteZoom>"+preset.z+"</absoluteZoom>" +
                     "</AbsoluteHigh></PTZData>";
@@ -275,5 +281,9 @@ public class AutoService implements Runnable {
         }
 
     }
+
+//    public static void main(String[] args) {
+//
+//    }
 
 }

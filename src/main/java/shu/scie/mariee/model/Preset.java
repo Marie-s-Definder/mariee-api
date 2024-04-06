@@ -28,4 +28,6 @@ public class Preset {
     public Long t;
 
     public Long z;
+
+    public Long slide_preset_id;
 }
