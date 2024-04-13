@@ -1,83 +1,58 @@
 package shu.scie.mariee.service;
 
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.Scanner;
 
 public class TcpTest {
-
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnknownHostException, IOException {
+        Socket s;
         try {
-            Socket socket = new Socket("172.16.104.2", 4196);
-            DataInputStream is = new DataInputStream(socket.getInputStream());
-            DataOutputStream os = new DataOutputStream(socket.getOutputStream());
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
+            s = new Socket();
 
-            Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    // 发送信息
-                    try {
-                        byte[] b = getCommandByDegrees(100);
-                        os.write(b);
-                        os.flush();
-                    } catch (Exception e) {
-                    }
+            s.connect(new InetSocketAddress("172.16.104.2",4196));
 
+            DataOutputStream out = new DataOutputStream(s.getOutputStream());
+
+            BufferedInputStream bis = new BufferedInputStream(s.getInputStream());
+            DataInputStream ips = new DataInputStream(bis);
+
+            byte[] b = getCommandByDegrees();
+            out.write(b);
+            out.flush();
+
+
+            byte[] bytes = new byte[1]; // 一次读取一个byte
+            String ret = "";
+            while (ips.read(bytes) != -1) {
+                ret += bytesToHexString(bytes) + " ";
+                if (ips.available() == 0) { //一个请求
+                    System.out.println(s.getRemoteSocketAddress() + ":" + ret);
+                    ret = "";
                 }
-            };
+            }
 
-            Runnable r2 = new Runnable() {
-                @Override
-                public void run() {
-                    // 接受发送的信息
-                    while (true) {
-                        String str;
-                        try {
-                            str = br.readLine();
-                            System.out.println("接受者receiver:" + str);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            };
-            Thread t1 = new Thread(r);
-            Thread t2 = new Thread(r2);
-            t1.start();
-            t2.start();
-
+            out.close();
         } catch (UnknownHostException e) {
-
+            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IOException e) {
-
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
-    public static byte[] getCommandByDegrees(int du){
+    public static byte[] getCommandByDegrees(){
         byte[] b = new byte[7];
         b[0] = (byte) 0xff;
         b[1] = (byte) 0x01;
         b[2] = (byte) 0x00;
-        b[3] = (byte) 0xEB;
+        b[3] = (byte) 0x03;
         b[4] = (byte) 0x00;//0x17
-        b[5] = (byte) 0x00;//0xDB
-        b[6] = (byte) 0xec;
-        //byte[] b = BitConverter.GetBytes(
-        //   0xba5eba11 );
+        b[5] = (byte) 0x01;//0xDB
+        b[6] = (byte) 0x05;
 
-//        String str=Integer.toHexString(du*100);
-//        System.out.println(du);
-//        System.out.println(Integer.toHexString(du));
-//        int  s4=Integer.valueOf(str.substring(0, 2));
-//        int  s5=Integer.valueOf(str.substring(2, 4));
-//        System.out.println();
-//        b[4] = (byte)s4;
-//        b[5] = (byte)s5;
 
         //q前面值相加对256取余数，校驗
         int sum=0;
@@ -85,11 +60,21 @@ public class TcpTest {
             sum=sum+b[i];
         }
         int y=sum%256;
-        //System.out.println(y+"--"+Integer.valueOf("3E",16));
-//        int s6= Integer.valueOf(Integer.toHexString(y));
+
         b[6] = (byte) y;
         System.out.println(sum);
         return b;
+    }
+    public static String bytesToHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < bytes.length; i++) {
+            String hex = Integer.toHexString(0xFF & bytes[i]);
+            if (hex.length() == 1) {
+                sb.append('0');
+            }
+            sb.append(hex);
+        }
+        return sb.toString();
     }
 
 }

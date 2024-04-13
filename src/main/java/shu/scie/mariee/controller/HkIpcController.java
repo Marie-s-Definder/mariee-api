@@ -52,7 +52,7 @@ public class HkIpcController {
 
     private final DataInfoRepository dataInfoRepository;
 
-    private HashMap<String, ScheduledFutureHolder> scheduleMap = new HashMap<>();
+    private final HashMap<String, ScheduledFutureHolder> scheduleMap = new HashMap<>();
 
     public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository, RobotService robotService,
                            DataService dataService, DeviceService deviceService, ThreadPoolTaskScheduler threadPoolTaskScheduler,
@@ -76,7 +76,7 @@ public class HkIpcController {
                 return new ApiResult<>(true,"timer starting repeat!");
             }
             AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService);
-            String corn = "0 0/10 * * * ? ";
+            String corn = "0 0/1 * * * ? ";
 
             ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, new CronTrigger(corn));
 
@@ -180,7 +180,7 @@ public class HkIpcController {
     public ApiResult<List<Device>> queryDevice(@RequestParam("robotId") Long robotId) {
         try {
             List<Device> lists = deviceService.getDeviceByRobotId(robotId);
-            System.out.println("queryDevice!");
+//            System.out.println("queryDevice!");
             return new ApiResult<>(true,lists);
         } catch (Exception e) {
             System.out.println("no device get");
@@ -221,6 +221,28 @@ public class HkIpcController {
             System.out.println("未获取到机器人信息！");
             return new ApiResult<>(false, null);
         }
+    }
+
+    @GetMapping("/slideLeft")
+    public ApiResult<String> slideLeft(@RequestParam("id") Long id) {
+        HkIpc ipc = this.hkIpcService.getById(id);
+        if (ipc == null) {
+            return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
+        }
+        TcpClient tcpClient = new TcpClient(ipc);
+        tcpClient.left();
+        return new ApiResult<>(true,"i do not know if the robot arrived");
+    }
+
+    @GetMapping("/slideRight")
+    public ApiResult<String> slideRight(@RequestParam("id") Long id) {
+        HkIpc ipc = this.hkIpcService.getById(id);
+        if (ipc == null) {
+            return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
+        }
+        TcpClient tcpClient = new TcpClient(ipc);
+        tcpClient.right();
+        return new ApiResult<>(true,"i do not know if the robot arrived");
     }
 
     @GetMapping("/liveUrl")
@@ -273,6 +295,40 @@ public class HkIpcController {
         }
 
         return new ApiResult<>(true, STR."snapshots/\{newFileName}");
+    }
+
+    @GetMapping("/getLocation")
+    public ApiResult<String> getLocation(@RequestParam("id") Long id) {
+        HkIpc ipc = this.hkIpcService.getById(id);
+        if (ipc == null) {
+            return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
+        }
+
+        HttpRequest req;
+        try {
+            req = HttpRequest.newBuilder()
+                    .uri(new URI(STR."http://\{ipc.ip}/ISAPI/PTZCtrl/channels/\{ipc.ptzChannel}/status"))
+                    .GET()
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
+                    .headers(HttpHeaders.AUTHORIZATION, STR."Basic \{Base64.getEncoder().encodeToString(STR."\{ipc.username}:\{ipc.password}".getBytes())}")
+                    .build();
+        } catch (URISyntaxException e) {
+            return new ApiResult<>(false, e.getMessage());
+        }
+
+
+        HttpResponse<String> res;
+        try {
+            res = this.httpClient.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            return new ApiResult<>(false, e.getMessage());
+        }
+
+        if (res.statusCode() != HttpStatus.OK.value()) {
+            return new ApiResult<>(false, Integer.toString(res.statusCode()));
+        }
+
+        return new ApiResult<>(true, res.body());
     }
 
     @GetMapping("/pan")

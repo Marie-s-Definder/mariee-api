@@ -42,6 +42,8 @@ public class AutoService implements Runnable {
 
     private final DeviceService deviceService;
 
+    private TcpClient SlideService;
+
     public AutoService(HkIpcService hkIpcService, Long id, PresetRepository presetRepository,
                        DataInfoRepository dataInfoRepository, DeviceService deviceService) {
         this.hkIpcService = hkIpcService;
@@ -50,6 +52,7 @@ public class AutoService implements Runnable {
         this.presetRepository = presetRepository;
         this.dataInfoRepository = dataInfoRepository;
         this.deviceService = deviceService;
+        this.SlideService = new TcpClient(hkIpcService.getById(id));
     }
 
     @Override
@@ -75,6 +78,9 @@ public class AutoService implements Runnable {
                 dataInfos.add(dataInfo1);
             }
             // go to presets
+
+            SlideService.gotoPresetPoint(preset.slide_preset_id.intValue());
+
             String requestBody = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><AbsoluteHigh>" +
                     "<elevation>"+preset.p+"</elevation><azimuth>"+preset.t+"</azimuth><absoluteZoom>"+preset.z+"</absoluteZoom>" +
                     "</AbsoluteHigh></PTZData>";
@@ -94,14 +100,14 @@ public class AutoService implements Runnable {
 
             if (moveRes.statusCode() == HttpStatus.OK.value()) {
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(30000);
                 } catch (InterruptedException e) {
                     System.out.println("Thread is interrupted while sleeping! Exiting.");
                     Thread.currentThread().interrupt();
                     return;
                 }
                 ApiResult<String> picPath = takePic(ipc);
-                 String picPath1 = i + ".jpg";
+                String picPath1 = picPath.data;
                 JSONObject jsonData = getJSONString(dataInfos,picPath1);
                 JSONObject jsonObject = getDetections(jsonData,"http://127.0.0.1:5000/Recognition");
                 if (jsonObject.get("response") == "false") {
@@ -128,7 +134,7 @@ public class AutoService implements Runnable {
 
     // take pictures
     private ApiResult<String> takePic(HkIpc ipc) {
-        Path snapshotFolderPath = Path.of("./static/snapshots");
+        Path snapshotFolderPath = Path.of("./data/snapshots");
         try {
             Files.createDirectories(snapshotFolderPath.normalize());
         } catch (IOException e) {
@@ -159,8 +165,9 @@ public class AutoService implements Runnable {
         if (res.statusCode() != HttpStatus.OK.value()) {
             return new ApiResult<>(false, null);
         }
-        System.out.println("image path:" + snapshotFolderPath);
-        return new ApiResult<>(true, snapshotFolderPath.toString());
+        String finaPath = "127.0.0.1:8080/snapshots/" + newFileName;
+        System.out.println("image path:" + finaPath);
+        return new ApiResult<>(true, newFileName);
     }
 
 
