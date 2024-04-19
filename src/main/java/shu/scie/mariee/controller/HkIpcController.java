@@ -223,6 +223,28 @@ public class HkIpcController {
         }
     }
 
+    @GetMapping("/queryPresets")
+    public ApiResult<List<Preset>> queryPresets(@RequestParam("id") Long id) {
+        try {
+            List<Preset> presets = presetRepository.findAllByRobot_id(id);
+            return new ApiResult<>(true,presets);
+        } catch (Exception e) {
+            return new ApiResult<>(false,null);
+        }
+    }
+
+    @GetMapping("/goToPreset")
+    public ApiResult<String> goToPreset(@RequestParam("robotId") Long robotId,
+                                        @RequestParam("presetId") Long presetId) {
+        HkIpc ipc = this.hkIpcService.getById(robotId);
+        if (ipc == null) {
+            return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{robotId}");
+        }
+        TcpClient tcpClient = new TcpClient(ipc);
+        tcpClient.gotoPresetPoint(presetId.intValue());
+        return new ApiResult<>(true,"i do not know if the robot arrived");
+    }
+
     @GetMapping("/slideLeft")
     public ApiResult<String> slideLeft(@RequestParam("id") Long id) {
         HkIpc ipc = this.hkIpcService.getById(id);
@@ -230,7 +252,7 @@ public class HkIpcController {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
         }
         TcpClient tcpClient = new TcpClient(ipc);
-        tcpClient.left();
+        tcpClient.right();
         return new ApiResult<>(true,"i do not know if the robot arrived");
     }
 
@@ -241,7 +263,7 @@ public class HkIpcController {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
         }
         TcpClient tcpClient = new TcpClient(ipc);
-        tcpClient.right();
+        tcpClient.left();
         return new ApiResult<>(true,"i do not know if the robot arrived");
     }
 

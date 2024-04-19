@@ -81,23 +81,31 @@ public class AutoService implements Runnable {
 
             SlideService.gotoPresetPoint(preset.slide_preset_id.intValue());
 
+            String requestBody1 = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><zoom>-100</zoom></PTZData>";
+
+
             String requestBody = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><AbsoluteHigh>" +
                     "<elevation>"+preset.p+"</elevation><azimuth>"+preset.t+"</azimuth><absoluteZoom>"+preset.z+"</absoluteZoom>" +
                     "</AbsoluteHigh></PTZData>";
 
+
+            HttpRequest moveReq1 =null;
             HttpRequest moveReq =null;
             try {
+                moveReq1 = this.makeIpcZoomRequest(ipc,requestBody1);
                 moveReq = this.makeIpcRequest(ipc, requestBody);
             } catch (URISyntaxException e) {
                 System.out.println("Start auto pilot request failed:" + e.getMessage());
             }
+            HttpResponse<String> moveRes1 = null;
             HttpResponse<String> moveRes = null;
             try {
+                moveRes1 = this.httpClient.send(moveReq1, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                Thread.sleep(2000);
                 moveRes = this.httpClient.send(moveReq, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             } catch (Exception e) {
                 System.out.println("Start auto pilot request failed: "+ e.getMessage());
             }
-
             if (moveRes.statusCode() == HttpStatus.OK.value()) {
                 try {
                     Thread.sleep(30000);
@@ -126,6 +134,15 @@ public class AutoService implements Runnable {
     private HttpRequest makeIpcRequest(HkIpc ipc, String body) throws URISyntaxException {
         return HttpRequest.newBuilder()
                 .uri(new URI(STR."http://\{ipc.ip}/ISAPI/PTZCtrl/channels/\{ipc.ptzChannel}/absolute"))
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
+                .headers(HttpHeaders.AUTHORIZATION, STR."Basic \{Base64.getEncoder().encodeToString(STR."\{ipc.username}:\{ipc.password}".getBytes())}")
+                .PUT(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+    }
+
+    private HttpRequest makeIpcZoomRequest(HkIpc ipc, String body) throws URISyntaxException {
+        return HttpRequest.newBuilder()
+                .uri(new URI(STR."http://\{ipc.ip}/ISAPI/PTZCtrl/channels/\{ipc.ptzChannel}/continuous"))
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
                 .headers(HttpHeaders.AUTHORIZATION, STR."Basic \{Base64.getEncoder().encodeToString(STR."\{ipc.username}:\{ipc.password}".getBytes())}")
                 .PUT(HttpRequest.BodyPublishers.ofString(body))
