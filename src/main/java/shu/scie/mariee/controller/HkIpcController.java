@@ -224,9 +224,9 @@ public class HkIpcController {
     }
 
     @GetMapping("/queryPresets")
-    public ApiResult<List<Preset>> queryPresets(@RequestParam("id") Long id) {
+    public ApiResult<List<Preset>> queryPresets(@RequestParam("robotId") Long robotId) {
         try {
-            List<Preset> presets = presetRepository.findAllByRobot_id(id);
+            List<Preset> presets = presetRepository.findAllByRobot_id(robotId);
             return new ApiResult<>(true,presets);
         } catch (Exception e) {
             return new ApiResult<>(false,null);

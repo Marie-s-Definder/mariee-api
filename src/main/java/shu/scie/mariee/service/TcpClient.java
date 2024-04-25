@@ -70,11 +70,16 @@ public class TcpClient {
 
             byte[] bytes = new byte[1]; // 一次读取一个byte
             String ret = "";
+            StringBuilder ensure = new StringBuilder();
             while (ips.read(bytes) != -1) {
-                ret = bytesToHexString(bytes) + " ";
-                if (ret.startsWith("1a")) { //一个请求
-                    System.out.println(s.getRemoteSocketAddress() + ":" + ret);
-                    break;
+                ret = bytesToHexString(bytes);
+                ensure.append(ret);
+                if(ensure.length() == 14) {
+                    if(ensure.toString().startsWith("ff1a0007000")) {
+                        System.out.println(ensure.toString());
+                        break;
+                    }
+                    ensure.delete(0,14);
                 }
             }
         }catch (IOException e) {
