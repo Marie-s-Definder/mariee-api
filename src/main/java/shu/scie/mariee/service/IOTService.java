@@ -1,26 +1,13 @@
 package shu.scie.mariee.service;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.time.Duration;
 import java.util.*;
-import javax.net.ssl.*;
-import java.security.SecureRandom;
+
 
 
 import org.jdom.Attribute;
@@ -28,8 +15,7 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
-import org.jdom.output.Format;
-import org.jdom.output.XMLOutputter;
+
 import java.io.*;
 
 
