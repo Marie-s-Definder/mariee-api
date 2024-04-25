@@ -121,17 +121,17 @@ public class IOTService {
 //
 //        try {
 //
-//            String url = "https://172.16.10.220/obix/config/Drivers/BacnetNetwork/AHU_ICU_4/points/ALM2";
+//            String url = "https://172.16.10.220/obix/config/Drivers/BacnetNetwork/AHU_ICU_4/points/Details";
 //
-//            HttpClient httpClient = createHttpClient();
+//            HttpClient httpClient = UtilService.createHttpClient();
 //
-//            String Poststr = getPostString("False","bool");
+//            //String Poststr = getPostString("true","bool");
 //
 //            HttpRequest request = HttpRequest.newBuilder()
 //                    .uri(URI.create(url))
 //                    .header("Authorization", "Basic " + encodedAuthString)
-//                    //.GET()
-//                    .POST(HttpRequest.BodyPublishers.ofString(Poststr))
+//                    .GET()
+//                    //.POST(HttpRequest.BodyPublishers.ofString(Poststr))
 //                    .build();
 //
 //            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
@@ -140,7 +140,7 @@ public class IOTService {
 //            System.out.println("//");
 //            System.out.println(response.body());
 //            String OutVal=resloveXML(response.body(),"out");
-//            System.out.println(OutVal);
+//            System.out.println(Float.parseFloat(Objects.requireNonNull(OutVal)));
 //
 //
 //
@@ -205,7 +205,7 @@ public class IOTService {
         Document document = saxBuilder.build(tInputStringStream);
         //4.获取根节点
         Element rootElement = document.getRootElement();
-        System.out.println("根节点:"+rootElement.getName()+":"+rootElement.getValue());
+        //System.out.println("根节点:"+rootElement.getName()+":"+rootElement.getValue());
         List<Attribute> rootattributes = rootElement.getAttributes();
         if (rootElement.getName()=="err"){
             return "err";
@@ -217,12 +217,12 @@ public class IOTService {
         //5.获取子节点
         List<Element> children = rootElement.getChildren();
         for (Element child : children) {
-            System.out.println("通过rollno获取属性值:"+child.getAttribute("rollno"));
+            //System.out.println("通过rollno获取属性值:"+child.getAttribute("rollno"));
             List<Attribute> attributes = child.getAttributes();
 
             //打印属性
             for (Attribute attr : attributes) {
-                System.out.println(attr.getName()+":"+attr.getValue());
+                //System.out.println(attr.getName()+":"+attr.getValue());
                 if (attr.getName() == "name"){
                     if (attr.getValue().equals(name)) {
                         for (Attribute a : attributes) {
@@ -234,7 +234,7 @@ public class IOTService {
                 }
             }
             List<Element> childrenList = child.getChildren();
-            System.out.println("======获取子节点-start======");
+            //System.out.println("======获取子节点-start======");
             for (Element o : childrenList) {
                 if (o.getName() == "name"){
                     if (o.getValue().equals(name)) {
@@ -245,9 +245,9 @@ public class IOTService {
                         }
                     }
                 }
-                System.out.println("节点名:"+o.getName()+"---"+"节点值:"+o.getValue());
+                //System.out.println("节点名:"+o.getName()+"---"+"节点值:"+o.getValue());
             }
-            System.out.println("======获取子节点-end======");
+            //System.out.println("======获取子节点-end======");
         }
         return null;
     }
