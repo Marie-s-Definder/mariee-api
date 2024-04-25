@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/mariee
-    username: mariee
+    url: jdbc:postgresql://mariee.e3.luyouxia.net:12414/mariee
+    username: rem
     password: qwertyuiop
   web:
     resources:

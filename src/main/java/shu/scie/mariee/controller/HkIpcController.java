@@ -1,15 +1,19 @@
 package shu.scie.mariee.controller;
 
 import io.micrometer.common.lang.Nullable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.web.bind.annotation.*;
-import shu.scie.mariee.model.ApiResult;
-import shu.scie.mariee.model.HkIpc;
+import shu.scie.mariee.model.*;
+import shu.scie.mariee.repository.DataInfoRepository;
+import shu.scie.mariee.repository.DataRepository;
 import shu.scie.mariee.repository.HkIpcRepository;
-import shu.scie.mariee.service.HkIpcService;
-import shu.scie.mariee.service.UtilService;
+import shu.scie.mariee.repository.PresetRepository;
+import shu.scie.mariee.service.*;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,7 +26,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -33,10 +40,80 @@ public class HkIpcController {
     private final HkIpcService hkIpcService;
     private final HkIpcRepository hkIpcRepository;
 
-    public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository) {
+    private final RobotService robotService;
+
+    private final DataService dataService;
+
+    private final DeviceService deviceService;
+
+    private final ThreadPoolTaskScheduler threadPoolTaskScheduler;
+
+    private final PresetRepository presetRepository;
+
+    private final DataInfoRepository dataInfoRepository;
+
+    private HashMap<String, ScheduledFutureHolder> scheduleMap = new HashMap<>();
+
+    public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository, RobotService robotService,
+                           DataService dataService, DeviceService deviceService, ThreadPoolTaskScheduler threadPoolTaskScheduler,
+                           PresetRepository presetRepository, DataInfoRepository dataInfoRepository) {
         this.hkIpcRepository = hkIpcRepository;
         this.httpClient = UtilService.createHttpClient();
         this.hkIpcService = hkIpcService;
+        this.robotService = robotService;
+        this.dataService = dataService;
+        this.deviceService = deviceService;
+        this.threadPoolTaskScheduler = threadPoolTaskScheduler;
+        this.presetRepository = presetRepository;
+        this.dataInfoRepository = dataInfoRepository;
+    }
+
+    @GetMapping("/startTimer")
+    public ApiResult<String> startTimer(@RequestParam("id") Long id) {
+        try {
+            if (scheduleMap.containsKey(id.toString())) {
+                System.out.println("timer" + id + "is already started!");
+                return new ApiResult<>(true,"timer starting repeat!");
+            }
+            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService);
+            String corn = "0 0/10 * * * ? ";
+
+            ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, new CronTrigger(corn));
+
+            ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
+            scheduledFutureHolder.setScheduledFuture(schedule);
+            scheduledFutureHolder.setRunnableClass(autoService.getClass());
+            scheduledFutureHolder.setCorn(corn);
+
+            scheduleMap.put(id.toString(),scheduledFutureHolder);
+            System.out.println("start timer with robot id: " + id);
+            return new ApiResult<>(true,"start timer!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ApiResult<>(false,"failed to start timer!");
+
+    }
+
+    @RequestMapping("/queryTimer")
+    public void queryTask(){
+        scheduleMap.forEach((k,v)->{
+            System.out.println(k+"  "+v);
+        });
+    }
+
+    @GetMapping("/stopTimer")
+    public ApiResult<String> stopTimer(@RequestParam("id") Long id) {
+        if (scheduleMap.containsKey(id.toString())) {
+            ScheduledFuture<?> scheduledFuture = scheduleMap.get(id.toString()).getScheduledFuture();
+            if (scheduledFuture != null) {
+                scheduledFuture.cancel(true);
+                scheduleMap.remove(id.toString());
+                System.out.println("stop timer for robot:" + "id");
+                return new ApiResult<>(true,"stop service for robot: " + id + " successful!");
+            }
+        }
+        return new ApiResult<>(false,"failed to stop service for robot: " + id );
     }
 
     @PostMapping("/create")
@@ -99,8 +176,55 @@ public class HkIpcController {
         return new ApiResult<>(true, hkIpcRepository.findByName(name).getFirst());
     }
 
+    @GetMapping("/queryDevice")
+    public ApiResult<List<Device>> queryDevice(@RequestParam("robotId") Long robotId) {
+        try {
+            List<Device> lists = deviceService.getDeviceByRobotId(robotId);
+            System.out.println("queryDevice!");
+            return new ApiResult<>(true,lists);
+        } catch (Exception e) {
+            System.out.println("no device get");
+            return new ApiResult<>(false, null);
+        }
+    }
+
+    @GetMapping("/queryAllData")
+    public ApiResult<List<Data>> queryAllData(@RequestParam("robotId") Long robotId,
+                                              @RequestParam("deviceName") String deviceName,
+                                              @Nullable @RequestParam("startTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
+                                              @Nullable @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime) {
+        try {
+            if (startTime != null && endTime != null) {
+                List<Data> dataList = dataService.getByDate(startTime, endTime, robotId, deviceName);
+                System.out.println("queryAllData");
+                return new ApiResult<>(true, dataList);
+            } else  {
+                List<Data> dataList = dataService.getAllData(robotId, deviceName);
+                System.out.println("queryAllData");
+                return new ApiResult<>(true, dataList);
+            }
+        } catch (Exception e) {
+            System.out.println("get no data！");
+            return new ApiResult<>(false, null);
+        }
+    }
+
+    // 根据楼栋、楼层、页码、每页的数量返回机器人的信息
+    @GetMapping("/queryRobot")
+    public ApiResult<List<Robot>> queryRobot(@RequestParam("building") String building,
+                                             @RequestParam("room") String room) {
+        try {
+            List<Robot> robots = robotService.getRobotsByBuildingAndRoom(building, room);
+            System.out.println("queryRobot！");
+            return new ApiResult<>(true, robots);
+        } catch (Exception e) {
+            System.out.println("未获取到机器人信息！");
+            return new ApiResult<>(false, null);
+        }
+    }
+
     @GetMapping("/liveUrl")
-    public ApiResult<String> pan(@RequestParam Long id) {
+    public ApiResult<String> pan(@RequestParam("id") Long id) {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -110,7 +234,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/snapshot")
-    public ApiResult<String> snapshot(@RequestParam Long id) {
+    public ApiResult<String> snapshot(@RequestParam("id") Long id) {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -152,7 +276,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/pan")
-    public ApiResult<String> pan(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> pan(@RequestParam("id") Long id, @RequestParam("direction") String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -174,7 +298,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/tilt")
-    public ApiResult<String> tilt(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> tilt(@RequestParam("id") Long id, @RequestParam("direction") String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -196,7 +320,7 @@ public class HkIpcController {
     }
 
     @GetMapping("/zoom")
-    public ApiResult<String> zoom(@RequestParam Long id, @RequestParam String direction) throws InterruptedException {
+    public ApiResult<String> zoom(@RequestParam("id") Long id, @RequestParam("direction") String direction) throws InterruptedException {
         HkIpc ipc = this.hkIpcService.getById(id);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
@@ -247,7 +371,7 @@ public class HkIpcController {
             speedPrefix = "-";
         }
 
-        String requestBody = STR."<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><\{action}>\{speedPrefix}10</\{action}></PTZData>";
+        String requestBody = STR."<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><\{action}>\{speedPrefix}20</\{action}></PTZData>";
 
         HttpRequest moveReq;
         try {
