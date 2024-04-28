@@ -11,6 +11,8 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.Properties;
+
 
 public class UtilService {
     public static HttpClient createHttpClient() {
@@ -27,6 +29,9 @@ public class UtilService {
                     }
                 }
         };
+
+        final Properties props = System.getProperties();
+        props.setProperty("jdk.internal.httpclient.disableHostnameVerification", Boolean.TRUE.toString());
 
         SSLContext sslContext;
         try {

@@ -81,9 +81,12 @@ public class AutoService implements Runnable {
 
             SlideService.gotoPresetPoint(preset.slide_preset_id.intValue());
 
+<<<<<<< HEAD
             String requestBody1 = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><zoom>-100</zoom></PTZData>";
 
 
+=======
+>>>>>>> df835e9472a4639c1230d27e4743d9e54d15268d
             String requestBody = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><AbsoluteHigh>" +
                     "<elevation>"+preset.p+"</elevation><azimuth>"+preset.t+"</azimuth><absoluteZoom>"+preset.z+"</absoluteZoom>" +
                     "</AbsoluteHigh></PTZData>";
@@ -299,5 +302,9 @@ public class AutoService implements Runnable {
         }
 
     }
+
+//    public static void main(String[] args) {
+//
+//    }
 
 }
