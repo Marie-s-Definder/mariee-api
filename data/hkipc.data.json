@@ -7,11 +7,7 @@
     "ptzChannel": "1",
     "streamChannel": "101",
     "liveUrl": "http://192.168.110.31:8888/mariee-101/index.m3u8",
-<<<<<<< HEAD
     "slide_ip": "172.16.104.2",
-=======
-    "slide_ip": "127.0.0.1",
->>>>>>> df835e9472a4639c1230d27e4743d9e54d15268d
     "slide_port": "4196"
   },
   {
@@ -22,11 +18,7 @@
     "ptzChannel": "1",
     "streamChannel": "102",
     "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8",
-<<<<<<< HEAD
     "slide_ip": "172.16.104.2",
-=======
-    "slide_ip": "127.0.0.1",
->>>>>>> df835e9472a4639c1230d27e4743d9e54d15268d
     "slide_port": "4196"
   },
 
@@ -36,15 +28,9 @@
     "username": "admin",
     "password": "Ehooters12345",
     "ptzChannel": "1",
-<<<<<<< HEAD
     "streamChannel": "103",
     "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8",
     "slide_ip": "172.16.104.2",
-=======
-    "streamChannel": "102",
-    "liveUrl": "http://192.168.110.31:8888/mariee-102/index.m3u8",
-    "slide_ip": "127.0.0.1",
->>>>>>> df835e9472a4639c1230d27e4743d9e54d15268d
     "slide_port": "4196"
   }
 ]
