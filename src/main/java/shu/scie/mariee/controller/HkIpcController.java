@@ -79,7 +79,7 @@ public class HkIpcController {
                 System.out.println("timer" + id + "is already started!");
                 return new ApiResult<>(true,"timer starting repeat!");
             }
-            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService);
+            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, iotreadonlyRepository);
             String corn = "0 0/1 * * * ? ";
 
             ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, new CronTrigger(corn));
