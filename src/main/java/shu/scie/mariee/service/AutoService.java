@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import shu.scie.mariee.model.*;
 import shu.scie.mariee.repository.DataInfoRepository;
 import shu.scie.mariee.repository.PresetRepository;
+import shu.scie.mariee.repository.IotreadonlyRepository;
 
 import java.io.IOException;
 import java.net.URI;
@@ -42,10 +43,14 @@ public class AutoService implements Runnable {
 
     private final DeviceService deviceService;
 
+    private final IotreadonlyRepository iotreadonlyRepository;
+
     private TcpClient SlideService;
 
+    private IOTService IotService;
+
     public AutoService(HkIpcService hkIpcService, Long id, PresetRepository presetRepository,
-                       DataInfoRepository dataInfoRepository, DeviceService deviceService) {
+                       DataInfoRepository dataInfoRepository, DeviceService deviceService, IotreadonlyRepository iotreadonlyRepository) {
         this.hkIpcService = hkIpcService;
         this.httpClient = UtilService.createHttpClient();
         this.id = id;
@@ -53,6 +58,8 @@ public class AutoService implements Runnable {
         this.dataInfoRepository = dataInfoRepository;
         this.deviceService = deviceService;
         this.SlideService = new TcpClient(hkIpcService.getById(id));
+        this.IotService = new IOTService("obix","Obix123456");
+        this.iotreadonlyRepository = iotreadonlyRepository;
     }
 
     @Override
@@ -70,9 +77,29 @@ public class AutoService implements Runnable {
                 return;
             }
             Preset preset = presets.get(i);
+
             String dataInfoId = preset.data_info_id;
             Long[] dataInfoIdList = stringToArray(dataInfoId);
             List<DataInfo> dataInfos = new ArrayList<>();
+
+            List<Iotreadonly> Iotreads = iotreadonlyRepository.findByDescriptionNotContainingAndPrestid("读",preset.id);
+            List<Float> Iot_value_float = new ArrayList<>();
+            List<Boolean> Iot_value_bool = new ArrayList<>();
+            for (int j = 0; j < Iotreads.size(); j++){
+                Iotreadonly Iotread = Iotreads.get(j);
+                String Iot_url = Iotread.url;
+                if(Iotread.datatype == "bool"){
+                    Boolean value = IotService.readIOTBool(Iot_url);
+                    Iot_value_bool.add(value);
+                }
+                else {
+                    Float value = IotService.readIOTReal(Iot_url);
+                    Iot_value_float.add(value);
+                }
+            }
+            List<JSONObject> Iotjsons = getJSONIot(Iotreads, Iot_value_float, Iot_value_bool);
+
+
             for (Long dataInfo : dataInfoIdList) {
                 DataInfo dataInfo1 = dataInfoRepository.findAllById(dataInfo);
                 dataInfos.add(dataInfo1);
@@ -116,7 +143,7 @@ public class AutoService implements Runnable {
                 }
                 ApiResult<String> picPath = takePic(ipc);
                 String picPath1 = picPath.data;
-                JSONObject jsonData = getJSONString(dataInfos,picPath1);
+                JSONObject jsonData = getJSONString(dataInfos,picPath1,Iotjsons);
                 JSONObject jsonObject = getDetections(jsonData,"http://127.0.0.1:5000/Recognition");
                 if (jsonObject.get("response") == "false") {
                     return;
@@ -201,7 +228,7 @@ public class AutoService implements Runnable {
     }
 
 
-    private static JSONObject getJSONString(List<DataInfo> dataInfos, String picUrl) {
+    private static JSONObject getJSONString(List<DataInfo> dataInfos, String picUrl, List<JSONObject> Iotjsons) {
         JSONObject json = new JSONObject();
         json.put("url",picUrl);
         JSONArray light = new JSONArray();
@@ -243,6 +270,9 @@ public class AutoService implements Runnable {
         bottom.add(json2);
         data.add(json1);
         data.add(json2);
+        if (Iotjsons != null){
+            data.addAll(Iotjsons);
+        }
         json.put("data",data);
         return json;
     }
@@ -270,6 +300,31 @@ public class AutoService implements Runnable {
             throw new RuntimeException(e);
         }
         return jsonResponse;
+    }
+
+    private static List<JSONObject> getJSONIot(List<Iotreadonly> Iotreads, List<Float> Iot_value_float, List<Boolean> Iot_value_bool)
+    {
+        List<JSONObject> Iotjsons = new ArrayList<>();
+        int m=0,n=0;
+        for (int i = 0; i < Iotreads.size(); i++) {
+            Iotreadonly Iotread = Iotreads.get(i);
+            JSONObject Iotjson = new JSONObject();
+            Iotjson.put("id",i+3);
+            Iotjson.put("type","iot");
+            Iotjson.put("deviceNname",Iotread.description);
+            if (Iotread.datatype == "bool"){
+                Iotjson.put("value",Iot_value_bool.get(m));
+                m++;
+            }
+            else {
+                Iotjson.put("value",Iot_value_float.get(n));
+                n++;
+            }
+            Iotjson.put("unit","");
+            Iotjson.put("status",0);
+            Iotjsons.add(Iotjson);
+        }
+        return Iotjsons;
     }
 
     private void writeData(JSONObject jsonObject, Long robotId, List<DataInfo> dataInfos) {
