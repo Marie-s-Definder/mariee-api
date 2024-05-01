@@ -82,7 +82,7 @@ public class AutoService implements Runnable {
             Long[] dataInfoIdList = stringToArray(dataInfoId);
             List<DataInfo> dataInfos = new ArrayList<>();
 
-            List<Iotreadonly> Iotreads = iotreadonlyRepository.findByDescriptionNotContainingAndPrestid("读",preset.id);
+            List<Iotreadonly> Iotreads = iotreadonlyRepository.findByDescriptionNotContainingAndPresetid("读",preset.id);
             List<Float> Iot_value_float = new ArrayList<>();
             List<Boolean> Iot_value_bool = new ArrayList<>();
             for (int j = 0; j < Iotreads.size(); j++){
