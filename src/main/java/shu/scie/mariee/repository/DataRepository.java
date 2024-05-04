@@ -12,6 +12,8 @@ public interface DataRepository extends CrudRepository<Data,Long> {
 
     List<Data> findByDateBetweenAndRobotidAndDevicenameOrderByDateDesc(Date startDate, Date endDate, Long robotId, String deviceName);
 
+    Data save(Data data);
+
 
 
 }

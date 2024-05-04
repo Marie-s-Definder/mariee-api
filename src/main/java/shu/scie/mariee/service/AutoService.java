@@ -44,8 +44,10 @@ public class AutoService implements Runnable {
 
     private TcpClient SlideService;
 
+    private final DataService dataService;
+
     public AutoService(HkIpcService hkIpcService, Long id, PresetRepository presetRepository,
-                       DataInfoRepository dataInfoRepository, DeviceService deviceService) {
+                       DataInfoRepository dataInfoRepository, DeviceService deviceService, DataService dataService) {
         this.hkIpcService = hkIpcService;
         this.httpClient = UtilService.createHttpClient();
         this.id = id;
@@ -53,6 +55,7 @@ public class AutoService implements Runnable {
         this.dataInfoRepository = dataInfoRepository;
         this.deviceService = deviceService;
         this.SlideService = new TcpClient(hkIpcService.getById(id));
+        this.dataService = dataService;
     }
 
     @Override
@@ -79,7 +82,7 @@ public class AutoService implements Runnable {
             }
             // go to presets
 
-            SlideService.gotoPresetPoint(preset.slide_preset_id.intValue());
+            SlideService.gotoPresetPoint(preset.device.intValue());
 
             String requestBody1 = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><zoom>-100</zoom></PTZData>";
 
@@ -117,7 +120,7 @@ public class AutoService implements Runnable {
                 ApiResult<String> picPath = takePic(ipc);
                 String picPath1 = picPath.data;
                 JSONObject jsonData = getJSONString(dataInfos,picPath1);
-                JSONObject jsonObject = getDetections(jsonData,"http://127.0.0.1:5000/Recognition");
+                JSONObject jsonObject = getDetections(jsonData,"http://172.16.104.254:5000/Recognition");
                 if (jsonObject.get("response") == "false") {
                     return;
                 } else {
@@ -292,6 +295,7 @@ public class AutoService implements Runnable {
                 data.status = dataObject.getLong("status");
                 data.imgpath = imgPath;
                 data.getby = imgPath == null ? 1L : 0L;
+                dataService.insertDate(data);
 //                System.out.println(data);
             }
         } catch (ParseException e) {
