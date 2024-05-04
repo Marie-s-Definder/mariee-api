@@ -13,6 +13,7 @@ import shu.scie.mariee.repository.DataInfoRepository;
 import shu.scie.mariee.repository.DataRepository;
 import shu.scie.mariee.repository.HkIpcRepository;
 import shu.scie.mariee.repository.PresetRepository;
+import shu.scie.mariee.repository.IotreadonlyRepository;
 import shu.scie.mariee.service.*;
 
 import java.io.IOException;
@@ -54,9 +55,11 @@ public class HkIpcController {
 
     private final HashMap<String, ScheduledFutureHolder> scheduleMap = new HashMap<>();
 
+    private final IotreadonlyRepository iotreadonlyRepository;
+
     public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository, RobotService robotService,
                            DataService dataService, DeviceService deviceService, ThreadPoolTaskScheduler threadPoolTaskScheduler,
-                           PresetRepository presetRepository, DataInfoRepository dataInfoRepository) {
+                           PresetRepository presetRepository, DataInfoRepository dataInfoRepository, IotreadonlyRepository iotreadonlyRepository) {
         this.hkIpcRepository = hkIpcRepository;
         this.httpClient = UtilService.createHttpClient();
         this.hkIpcService = hkIpcService;
@@ -66,6 +69,7 @@ public class HkIpcController {
         this.threadPoolTaskScheduler = threadPoolTaskScheduler;
         this.presetRepository = presetRepository;
         this.dataInfoRepository = dataInfoRepository;
+        this.iotreadonlyRepository = iotreadonlyRepository;
     }
 
     @GetMapping("/startTimer")
@@ -75,7 +79,7 @@ public class HkIpcController {
                 System.out.println("timer" + id + "is already started!");
                 return new ApiResult<>(true,"timer starting repeat!");
             }
-            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, dataService);
+            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
             String corn = "0 0/1 * * * ? ";
 
             ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, new CronTrigger(corn));
