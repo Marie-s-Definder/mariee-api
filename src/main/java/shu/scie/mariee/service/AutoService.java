@@ -88,7 +88,7 @@ public class AutoService implements Runnable {
             for (int j = 0; j < Iotreads.size(); j++){
                 Iotreadonly Iotread = Iotreads.get(j);
                 String Iot_url = Iotread.url;
-                if(Iotread.datatype == "bool"){
+                if(Iotread.datatype.contains("bool")){
                     Boolean value = IotService.readIOTBool(Iot_url);
                     Iot_value_bool.add(value);
                 }
@@ -312,7 +312,7 @@ public class AutoService implements Runnable {
             Iotjson.put("id",i+3);
             Iotjson.put("type","iot");
             Iotjson.put("deviceNname",Iotread.description);
-            if (Iotread.datatype == "bool"){
+            if (Iotread.datatype.contains("bool")){
                 Iotjson.put("value",Iot_value_bool.get(m));
                 m++;
             }
