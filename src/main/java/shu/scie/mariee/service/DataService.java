@@ -29,4 +29,8 @@ public class DataService {
         return dataRepository.findByDateBetweenAndRobotidAndDevicenameOrderByDateDesc(startTime, endTime, robotId, deviceName);
     }
 
+    public void insertDate(Data data) {
+        dataRepository.save(data);
+    }
+
 }

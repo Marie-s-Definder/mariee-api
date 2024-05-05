@@ -10,4 +10,6 @@ public interface PresetRepository extends CrudRepository<Preset,Long> {
 
     @Query(value = "select * from preset where robot_id = ?1 order by slide_preset_id asc ",nativeQuery = true)
     List<Preset> findAllByRobot_id(Long robotId);
+
+    Preset findPresetById(Long id);
 }

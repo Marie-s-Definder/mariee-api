@@ -79,7 +79,7 @@ public class HkIpcController {
                 System.out.println("timer" + id + "is already started!");
                 return new ApiResult<>(true,"timer starting repeat!");
             }
-            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, iotreadonlyRepository);
+            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
             String corn = "0 0/20 * * * ? ";
 
             ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, new CronTrigger(corn));
@@ -240,12 +240,33 @@ public class HkIpcController {
     @GetMapping("/goToPreset")
     public ApiResult<String> goToPreset(@RequestParam("robotId") Long robotId,
                                         @RequestParam("presetId") Long presetId) {
+
+        // get camera
         HkIpc ipc = this.hkIpcService.getById(robotId);
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{robotId}");
         }
+        // go to preset
+        Preset preset = presetRepository.findPresetById(presetId);
         TcpClient tcpClient = new TcpClient(ipc);
-        tcpClient.gotoPresetPoint(presetId.intValue());
+        tcpClient.gotoPresetPoint(preset.device.intValue());
+
+        // set ptz of camera
+        String requestBody = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><AbsoluteHigh>" +
+                "<elevation>"+preset.p+"</elevation><azimuth>"+preset.t+"</azimuth><absoluteZoom>"+preset.z+"</absoluteZoom>" +
+                "</AbsoluteHigh></PTZData>";
+        HttpRequest moveReq =null;
+        try {
+            moveReq = this.makeIpcAbsoluteRequest(ipc, requestBody);
+        } catch (URISyntaxException e) {
+            System.out.println("Start auto pilot request failed:" + e.getMessage());
+        }
+        HttpResponse<String> moveRes = null;
+        try {
+            moveRes = this.httpClient.send(moveReq, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            System.out.println("Start auto pilot request failed: "+ e.getMessage());
+        }
         return new ApiResult<>(true,"i do not know if the robot arrived");
     }
 
@@ -511,6 +532,15 @@ public class HkIpcController {
     private HttpRequest makeIpcRequest(HkIpc ipc, String body) throws URISyntaxException {
         return HttpRequest.newBuilder()
                 .uri(new URI(STR."http://\{ipc.ip}/ISAPI/PTZCtrl/channels/\{ipc.ptzChannel}/continuous"))
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
+                .headers(HttpHeaders.AUTHORIZATION, STR."Basic \{Base64.getEncoder().encodeToString(STR."\{ipc.username}:\{ipc.password}".getBytes())}")
+                .PUT(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+    }
+
+    private HttpRequest makeIpcAbsoluteRequest(HkIpc ipc, String body) throws URISyntaxException {
+        return HttpRequest.newBuilder()
+                .uri(new URI(STR."http://\{ipc.ip}/ISAPI/PTZCtrl/channels/\{ipc.ptzChannel}/absolute"))
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
                 .headers(HttpHeaders.AUTHORIZATION, STR."Basic \{Base64.getEncoder().encodeToString(STR."\{ipc.username}:\{ipc.password}".getBytes())}")
                 .PUT(HttpRequest.BodyPublishers.ofString(body))
