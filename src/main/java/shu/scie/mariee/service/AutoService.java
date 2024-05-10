@@ -2,7 +2,6 @@ package shu.scie.mariee.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.junit.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -339,7 +338,7 @@ public class AutoService implements Runnable {
             devicefresh.status = 0L; // 先设为0后面有异常自动设为1
             for (int i = 0; i < jsonArray.size(); i++) {
                 JSONObject dataObject = jsonArray.getJSONObject(i);
-                DataInfo dataInfo = dataInfos.get(i);//这里获取的是
+                DataInfo dataInfo = dataInfos.get(i);
 //                System.out.println(dataInfo);
                 Data data = new Data();
                 Device devicestatuschange = new Device();
@@ -360,28 +359,11 @@ public class AutoService implements Runnable {
                 dataService.deviceStatus(devicestatuschange);
                 // System.out.println(data);
             }
-            // 更新数据库
-
-//                freshDatabase(devicefresh);
             dataService.deviceStatus(devicefresh);
-//                System.out.println(devicefresh);
-
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
 
     }
-//    public void freshDatabase(Device devicefresh) {
-//        // 更新数据库
-//
-//    }
-
-//    private void changeStatus(JSONObject jsonObject, List<Device> device){
-//
-//    }
-
-//    public static void main(String[] args) {
-//
-//    }
 
 }
