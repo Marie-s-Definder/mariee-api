@@ -2,6 +2,7 @@ package shu.scie.mariee.service;
 
 import org.springframework.stereotype.Service;
 import shu.scie.mariee.model.Data;
+import shu.scie.mariee.model.Device;
 import shu.scie.mariee.repository.DataRepository;
 
 import java.util.Date;
@@ -31,6 +32,10 @@ public class DataService {
 
     public void insertDate(Data data) {
         dataRepository.save(data);
+    }
+
+    public void deviceStatus(Device device) {
+        dataRepository.save(device);
     }
 
 }

@@ -17,11 +17,11 @@ public class Preset {
     @GeneratedValue()
     public Long id;
 
-    public String data_info_id;
+    public String dataInfoId;
 
     public Long device;
 
-    public Long robot_id;
+    public Long robotId;
 
     public Long p;
 
@@ -29,5 +29,5 @@ public class Preset {
 
     public Long z;
 
-    public Long slide_preset_id;
+    public Long slidePresetId;
 }

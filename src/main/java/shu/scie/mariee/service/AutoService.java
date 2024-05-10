@@ -2,6 +2,7 @@ package shu.scie.mariee.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.junit.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -81,7 +82,7 @@ public class AutoService implements Runnable {
             }
             Preset preset = presets.get(i);
 
-            String dataInfoId = preset.data_info_id;
+            String dataInfoId = preset.dataInfoId;
             Long[] dataInfoIdList = stringToArray(dataInfoId);
             List<DataInfo> dataInfos = new ArrayList<>();
 
@@ -117,7 +118,6 @@ public class AutoService implements Runnable {
             String requestBody = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><AbsoluteHigh>" +
                     "<elevation>"+preset.p+"</elevation><azimuth>"+preset.t+"</azimuth><absoluteZoom>"+preset.z+"</absoluteZoom>" +
                     "</AbsoluteHigh></PTZData>";
-
 
             HttpRequest moveReq1 =null;
             HttpRequest moveReq =null;
@@ -334,12 +334,15 @@ public class AutoService implements Runnable {
         String imgPath = jsonObject.getString("url");
         JSONArray jsonArray = jsonObject.getJSONArray("data");
         String pattern = "yyyy-MM-dd HH:mm:ss";
-
         try {
+            Device devicefresh = deviceService.getDeviceById(dataInfos.get(0).device_id); // 获取第一个
+            devicefresh.status = 0L; // 先设为0后面有异常自动设为1
             for (int i = 0; i < jsonArray.size(); i++) {
                 JSONObject dataObject = jsonArray.getJSONObject(i);
-                DataInfo dataInfo = dataInfos.get(i);
+                DataInfo dataInfo = dataInfos.get(i);//这里获取的是
+//                System.out.println(dataInfo);
                 Data data = new Data();
+                Device devicestatuschange = new Device();
                 data.robotid = robotId;
                 Device device = deviceService.getDeviceById(dataInfo.device_id);
                 data.devicename = device.name;
@@ -348,16 +351,34 @@ public class AutoService implements Runnable {
                 data.name = dataInfo.name;
                 data.result = dataObject.getString("result");
                 data.status = dataObject.getLong("status");
+                if( data.status == 1){ // 如果有异常就设为 true
+                    devicefresh.status = 1L;
+                }
                 data.imgpath = imgPath;
                 data.getby = imgPath == null ? 1L : 0L;
                 dataService.insertDate(data);
-//                System.out.println(data);
+                dataService.deviceStatus(devicestatuschange);
+                // System.out.println(data);
             }
+            // 更新数据库
+
+//                freshDatabase(devicefresh);
+            dataService.deviceStatus(devicefresh);
+//                System.out.println(devicefresh);
+
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
 
     }
+//    public void freshDatabase(Device devicefresh) {
+//        // 更新数据库
+//
+//    }
+
+//    private void changeStatus(JSONObject jsonObject, List<Device> device){
+//
+//    }
 
 //    public static void main(String[] args) {
 //
