@@ -158,7 +158,7 @@ public class AutoService implements Runnable {
             }
             System.out.println("this is the" + i + "time loop for robot:" + id);
         }
-    }//
+    }
 
     // make HTTP request
     private HttpRequest makeIpcRequest(HkIpc ipc, String body) throws URISyntaxException {
