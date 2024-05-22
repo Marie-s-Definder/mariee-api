@@ -138,19 +138,22 @@ public class AutoService implements Runnable {
             if (moveRes.statusCode() == HttpStatus.OK.value()) {
                 try {
                     Thread.sleep(30000);
+                    ApiResult<String> picPath = takePic(ipc);
+                    moveRes1 = this.httpClient.send(moveReq1, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                    String picPath1 = picPath.data;
+                    JSONObject jsonData = getJSONString(dataInfos,picPath1,Iotjsons);
+                    JSONObject jsonObject = getDetections(jsonData,"http://172.16.104.254:5000/Recognition");
+                    if (jsonObject.get("response") == "false") {
+                        return;
+                    } else {
+                        writeData(jsonObject.getJSONObject("response"), id, dataInfos);
+                    }
                 } catch (InterruptedException e) {
                     System.out.println("Thread is interrupted while sleeping! Exiting.");
                     Thread.currentThread().interrupt();
                     return;
-                }
-                ApiResult<String> picPath = takePic(ipc);
-                String picPath1 = picPath.data;
-                JSONObject jsonData = getJSONString(dataInfos,picPath1,Iotjsons);
-                JSONObject jsonObject = getDetections(jsonData,"http://172.16.104.254:5000/Recognition");
-                if (jsonObject.get("response") == "false") {
-                    return;
-                } else {
-                    writeData(jsonObject.getJSONObject("response"), id, dataInfos);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             } else {
                 System.out.println("Start auto pilot request failed: " + moveRes.statusCode());
