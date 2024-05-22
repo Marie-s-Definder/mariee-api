@@ -20,5 +20,6 @@ public class HkIpcService {
         return hkIpcRepository.findById(id).orElse(null);
     }
 
+    public void updateTimeById(Long id, Long intervalTime){hkIpcRepository.updateIntervalTimeById(id, intervalTime);}
 
 }

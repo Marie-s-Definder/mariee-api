@@ -7,7 +7,7 @@ public class ScheduledFutureHolder {
 
     private Class<? extends Runnable> runnableClass;
 
-    private String corn;
+    private Long interval_time;;
 
     public ScheduledFuture<?> getScheduledFuture() {
         return scheduledFuture;
@@ -25,12 +25,12 @@ public class ScheduledFutureHolder {
         this.runnableClass = runnableClass;
     }
 
-    public String getCorn() {
-        return corn;
+    public Long getinterval() {
+        return interval_time;
     }
 
-    public void setCorn(String corn) {
-        this.corn = corn;
+    public void setinterval(Long interval_time) {
+        this.interval_time = interval_time;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class ScheduledFutureHolder {
         return "ScheduledFutureHolder{" +
                 "scheduledFuture=" + scheduledFuture +
                 ", runnableClass=" + runnableClass +
-                ", corn='" + corn + '\'' +
+                ", interval_time='" + interval_time + '\'' +
                 '}';
     }
 }

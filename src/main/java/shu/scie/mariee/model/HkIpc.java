@@ -32,5 +32,6 @@ public class HkIpc {
 
     public Long slide_port;
 
+    public Long interval_time;
 }
 

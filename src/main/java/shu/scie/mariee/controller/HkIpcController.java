@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.scheduling.support.PeriodicTrigger;
 import org.springframework.web.bind.annotation.*;
 import shu.scie.mariee.model.*;
 import shu.scie.mariee.repository.DataInfoRepository;
@@ -31,6 +32,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -75,19 +77,29 @@ public class HkIpcController {
     @GetMapping("/startTimer")
     public ApiResult<String> startTimer(@RequestParam("id") Long id) {
         try {
+            HkIpc ipc = this.hkIpcService.getById(id);
+            if (ipc == null) {
+                return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
+            }
+
             if (scheduleMap.containsKey(id.toString())) {
                 System.out.println("timer" + id + "is already started!");
                 return new ApiResult<>(true,"timer starting repeat!");
             }
-            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
-            String corn = "0 0/20 * * * ? ";
 
-            ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, new CronTrigger(corn));
+            AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
+            //String corn = "0 0/20 * * * ? ";
+            PeriodicTrigger periodicTrigger = new PeriodicTrigger(ipc.interval_time, TimeUnit.MINUTES);
+
+
+
+            ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, periodicTrigger);
 
             ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
             scheduledFutureHolder.setScheduledFuture(schedule);
             scheduledFutureHolder.setRunnableClass(autoService.getClass());
-            scheduledFutureHolder.setCorn(corn);
+            scheduledFutureHolder.setinterval(ipc.interval_time);
+            //scheduledFutureHolder.setCorn(corn);
 
             scheduleMap.put(id.toString(),scheduledFutureHolder);
             System.out.println("start timer with robot id: " + id);
@@ -99,12 +111,55 @@ public class HkIpcController {
 
     }
 
-    @RequestMapping("/queryTimer")
-    public void queryTask(){
-        scheduleMap.forEach((k,v)->{
-            System.out.println(k+"  "+v);
-        });
+    @GetMapping("/queryTimer")
+    public ApiResult<String> queryTask(@RequestParam("id") Long id){
+        if (scheduleMap.containsKey(id.toString())) {
+            ScheduledFutureHolder scheduledFuturehold = scheduleMap.get(id.toString());
+            if (scheduledFuturehold != null) {
+                return new ApiResult<>(true,"service for robot: " + id + " at "+ scheduledFuturehold.getinterval() +" minutes intervals.");
+            }
+        }
+
+        return new ApiResult<>(false,"not found service for robot: " + id );
     }
+
+    @PostMapping("/modifyTimer")
+    public ApiResult<String> modifyTimer(@RequestParam("robotId") Long robotId,
+                                         @RequestParam("intervalTime") Long intervalTime) {
+        // get camera
+        HkIpc ipc = this.hkIpcService.getById(robotId);
+        if (ipc == null) {
+            return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{robotId}");
+        }
+        this.hkIpcService.updateTimeById(robotId,intervalTime);
+
+        // get service
+        ScheduledFuture<?> scheduledFuture = scheduleMap.get(robotId.toString()).getScheduledFuture();;
+        if (scheduledFuture == null) {
+            return new ApiResult<>(true, STR."robot ID: \{robotId} intervals modified to \{intervalTime} minutes but not start.");
+        }
+        else{
+            scheduledFuture.cancel(true);
+            scheduleMap.remove(robotId.toString());
+
+            AutoService autoService = new AutoService(hkIpcService, robotId, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
+            PeriodicTrigger periodicTrigger = new PeriodicTrigger(ipc.interval_time, TimeUnit.MINUTES);
+
+            ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, periodicTrigger);
+
+            ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
+            scheduledFutureHolder.setScheduledFuture(schedule);
+            scheduledFutureHolder.setRunnableClass(autoService.getClass());
+            scheduledFutureHolder.setinterval(ipc.interval_time);
+
+            scheduleMap.put(robotId.toString(),scheduledFutureHolder);
+
+            return new ApiResult<>(true, STR."robot ID: \{robotId} intervals modified to \{intervalTime} minutes and timer restarted.");
+        }
+
+
+    }
+
 
     @GetMapping("/stopTimer")
     public ApiResult<String> stopTimer(@RequestParam("id") Long id) {
@@ -548,3 +603,4 @@ public class HkIpcController {
     }
 
 }
+
