@@ -134,11 +134,8 @@ public class HkIpcController {
         this.hkIpcService.updateTimeById(robotId,intervalTime);
 
         // get service
-        ScheduledFuture<?> scheduledFuture = scheduleMap.get(robotId.toString()).getScheduledFuture();;
-        if (scheduledFuture == null) {
-            return new ApiResult<>(true, STR."robot ID: \{robotId} intervals modified to \{intervalTime} minutes but not start.");
-        }
-        else{
+        if (scheduleMap.containsKey(robotId.toString())) {
+            ScheduledFuture<?> scheduledFuture = scheduleMap.get(robotId.toString()).getScheduledFuture();
             scheduledFuture.cancel(true);
             scheduleMap.remove(robotId.toString());
 
@@ -155,6 +152,10 @@ public class HkIpcController {
             scheduleMap.put(robotId.toString(),scheduledFutureHolder);
 
             return new ApiResult<>(true, STR."robot ID: \{robotId} intervals modified to \{intervalTime} minutes and timer restarted.");
+
+        }
+        else {
+            return new ApiResult<>(true, STR."robot ID: \{robotId} intervals modified to \{intervalTime} minutes but not start.");
         }
 
 
