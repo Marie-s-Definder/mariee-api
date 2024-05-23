@@ -74,6 +74,7 @@ public class AutoService implements Runnable {
         }
         List<Preset> presets = presetRepository.findAllByRobot_id(id);
         System.out.println("Time is:" + new Date());
+        System.out.println("presetssize:" + presets.size());
         for (int i = 0; i < presets.size(); i++) {
 
             if (Thread.currentThread().isInterrupted()) {
@@ -109,10 +110,10 @@ public class AutoService implements Runnable {
                 dataInfos.add(dataInfo1);
             }
             // go to presets
+            // 哈希表中转一下
             TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(i+1));
+
             SlideService.gotoPresetPoint(preset.device.intValue());
-            //维护一个字典来记录当前预置点位置
-            
 
             String requestBody1 = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><zoom>-100</zoom></PTZData>";
 

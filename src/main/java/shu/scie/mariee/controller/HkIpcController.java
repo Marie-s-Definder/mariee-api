@@ -27,13 +27,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -259,23 +255,111 @@ public class HkIpcController {
     }
 
     @GetMapping("/queryAllData")
-    public ApiResult<List<Data>> queryAllData(@RequestParam("robotId") Long robotId,
+    public ApiResult<List<DataOne>> queryAllData(@RequestParam("robotId") Long robotId,
                                               @RequestParam("deviceName") String deviceName,
                                               @Nullable @RequestParam("startTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date startTime,
                                               @Nullable @RequestParam("endTime") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date endTime) {
         try {
             if (startTime != null && endTime != null) {
                 List<Data> dataList = dataService.getByDate(startTime, endTime, robotId, deviceName);
+                Thread.sleep(1000);
+                System.out.println(dataList.size());
+                List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
                 System.out.println("queryAllData");
-                return new ApiResult<>(true, dataList);
-            } else  {
+                return new ApiResult<>(true, finalList);
+            } else {
                 List<Data> dataList = dataService.getAllData(robotId, deviceName);
+                Thread.sleep(1000);
+                System.out.println(dataList.size());
+                List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
                 System.out.println("queryAllData");
-                return new ApiResult<>(true, dataList);
+                return new ApiResult<>(true, finalList);
             }
         } catch (Exception e) {
-            System.out.println("get no data！");
+            System.out.println(" get no data！");
             return new ApiResult<>(false, null);
+        }
+    }
+    public List<DataOne> CutSeven2One(List<Data> allist){
+        List<DataOne> aloneList = new ArrayList<DataOne>();
+        Data TempBefore = allist.get(0);
+        DataOne one = new DataOne();
+        /*
+        * 先塞一个进去
+        * */
+        int index = 1;
+        add2Data(one,TempBefore,index);
+        add2OtherData(one,TempBefore);
+
+        for (int i = 1; i < allist.size(); i++) {
+            index++;
+            Data TempNow = allist.get(i);
+            /*
+            * 如果为False，则说明大于60秒该建立新的one用来塞
+            * 如果为true，则说明继续塞到one里面
+            * */
+            if(CompareData(TempBefore, TempNow)){
+                add2Data(one, TempNow, index);
+            } else {
+                index = 1;
+                aloneList.add(one);
+                one = new DataOne();
+                add2Data(one, TempNow, index);
+                add2OtherData(one,TempBefore);//添加其他信息
+            }
+
+            TempBefore = TempNow;
+        }
+        return aloneList;
+    }
+    public boolean CompareData(Data TempBefore, Data TempNow) {
+        Long compare = TempBefore.date.getTime()/1000 - TempNow.date.getTime()/1000;//秒数相减
+        if( compare < 60 && compare > -60){
+            return true;// 继续塞进去
+        } else {
+            return false;// 建立新的one用来塞
+        }
+    }
+    public void add2OtherData(DataOne one, Data TempBefore) {
+        one.id = TempBefore.id;
+        one.date = TempBefore.date;
+        one.devicename = TempBefore.devicename;
+        one.robotid = TempBefore.robotid;
+        one.getby = TempBefore.getby;
+        one.imgpath = TempBefore.imgpath;
+    }
+    public void add2Data(DataOne one, Data TempBefore, int index) {
+        switch (index){
+            case 1:
+                one.name1 = TempBefore.name;
+                one.result1 = TempBefore.result;
+                break;
+            case 2:
+                one.name2 = TempBefore.name;
+                one.result2 = TempBefore.result;
+                break;
+            case 3:
+                one.name3 = TempBefore.name;
+                one.result3 = TempBefore.result;
+                break;
+            case 4:
+                one.name4 = TempBefore.name;
+                one.result4 = TempBefore.result;
+                break;
+            case 5:
+                one.name5 = TempBefore.name;
+                one.result5 = TempBefore.result;
+                break;
+            case 6:
+                one.name6 = TempBefore.name;
+                one.result6 = TempBefore.result;
+                break;
+            case 7:
+                one.name7 = TempBefore.name;
+                one.result7 = TempBefore.result;
+                break;
+            default:
+                System.out.println("Wrong index");
         }
     }
 

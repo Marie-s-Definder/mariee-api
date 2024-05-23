@@ -2,7 +2,6 @@ package shu.scie.mariee.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.junit.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -76,6 +75,7 @@ public class AutoService implements Runnable {
         List<Preset> presets = presetRepository.findAllByRobot_id(id);
         System.out.println("Time is:" + new Date());
         for (int i = 0; i < presets.size(); i++) {
+
             if (Thread.currentThread().isInterrupted()) {
                 System.out.println("Thread interrupted. Exiting loop!");
                 return;
@@ -109,7 +109,7 @@ public class AutoService implements Runnable {
                 dataInfos.add(dataInfo1);
             }
             // go to presets
-
+            TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(i+1));
             SlideService.gotoPresetPoint(preset.device.intValue());
 
             String requestBody1 = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><zoom>-100</zoom></PTZData>";
@@ -139,26 +139,29 @@ public class AutoService implements Runnable {
             if (moveRes.statusCode() == HttpStatus.OK.value()) {
                 try {
                     Thread.sleep(30000);
+                    ApiResult<String> picPath = takePic(ipc);
+                    moveRes1 = this.httpClient.send(moveReq1, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                    String picPath1 = picPath.data;
+                    JSONObject jsonData = getJSONString(dataInfos,picPath1,Iotjsons);
+                    JSONObject jsonObject = getDetections(jsonData,"http://172.16.104.254:5000/Recognition");
+                    if (jsonObject.get("response") == "false") {
+                        return;
+                    } else {
+                        writeData(jsonObject.getJSONObject("response"), id, dataInfos);
+                    }
                 } catch (InterruptedException e) {
                     System.out.println("Thread is interrupted while sleeping! Exiting.");
                     Thread.currentThread().interrupt();
                     return;
-                }
-                ApiResult<String> picPath = takePic(ipc);
-                String picPath1 = picPath.data;
-                JSONObject jsonData = getJSONString(dataInfos,picPath1,Iotjsons);
-                JSONObject jsonObject = getDetections(jsonData,"http://172.16.104.254:5000/Recognition");
-                if (jsonObject.get("response") == "false") {
-                    return;
-                } else {
-                    writeData(jsonObject.getJSONObject("response"), id, dataInfos);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             } else {
                 System.out.println("Start auto pilot request failed: " + moveRes.statusCode());
             }
             System.out.println("this is the" + i + "time loop for robot:" + id);
         }
-    }
+    }//
 
     // make HTTP request
     private HttpRequest makeIpcRequest(HkIpc ipc, String body) throws URISyntaxException {
@@ -339,7 +342,7 @@ public class AutoService implements Runnable {
             devicefresh.status = 0L; // 先设为0后面有异常自动设为1
             for (int i = 0; i < jsonArray.size(); i++) {
                 JSONObject dataObject = jsonArray.getJSONObject(i);
-                DataInfo dataInfo = dataInfos.get(i);//这里获取的是
+                DataInfo dataInfo = dataInfos.get(i);
 //                System.out.println(dataInfo);
                 Data data = new Data();
                 Device devicestatuschange = new Device();
@@ -360,28 +363,11 @@ public class AutoService implements Runnable {
                 dataService.deviceStatus(devicestatuschange);
                 // System.out.println(data);
             }
-            // 更新数据库
-
-//                freshDatabase(devicefresh);
             dataService.deviceStatus(devicefresh);
-//                System.out.println(devicefresh);
-
         } catch (ParseException e) {
             System.out.println(e.getMessage());
         }
 
     }
-//    public void freshDatabase(Device devicefresh) {
-//        // 更新数据库
-//
-//    }
-
-//    private void changeStatus(JSONObject jsonObject, List<Device> device){
-//
-//    }
-
-//    public static void main(String[] args) {
-//
-//    }
 
 }
