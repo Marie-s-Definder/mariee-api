@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -119,17 +118,25 @@ public class HkIpcController {
             if (scheduledFuturehold != null) {
                 return new ApiResult<>(true,"service for robot: " + id + " at "+ scheduledFuturehold.getinterval() +" minutes intervals.");
             }
-
         }
+
         return new ApiResult<>(false,"not found service for robot: " + id );
     }
 
     @GetMapping("/queryPresetNow")
     public ApiResult<String> queryPresetNow(@RequestParam("id") Long id){
+//        if (scheduleMap.containsKey(id.toString())) {
+//            ScheduledFutureHolder scheduledFuturehold = scheduleMap.get(id.toString());
+//            if (scheduledFuturehold != null) {
+//                return new ApiResult<>(true,"PRESET IN:" + id);
+//            }
+//        }
+
         if (TempPreset.robotid_preset.containsKey(String.valueOf(id))) {
-            return new ApiResult<>(true,"PRESET IN:" + TempPreset.robotid_preset.get(String.valueOf(id)));
+            return new ApiResult<>(true,"PRESET IN:" + TempPreset.robotid_preset.get(String.valueOf(id+1)));
         }
-        return new ApiResult<>(false,"PRESET IN:nulll" );
+
+        return new ApiResult<>(false,"NOFOUND:" + id );
     }
 
     @PostMapping("/modifyTimer")
@@ -179,7 +186,6 @@ public class HkIpcController {
                 scheduledFuture.cancel(true);
                 scheduleMap.remove(id.toString());
                 System.out.println("stop timer for robot:" + "id");
-                TempPreset.robotid_preset.put(String.valueOf(id), "");
                 return new ApiResult<>(true,"stop service for robot: " + id + " successful!");
             }
         }
@@ -312,11 +318,10 @@ public class HkIpcController {
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{robotId}");
         }
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(presetId));
         // go to preset
         Preset preset = presetRepository.findPresetById(presetId);
         TcpClient tcpClient = new TcpClient(ipc);
-
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(presetId));
         tcpClient.gotoPresetPoint(preset.device.intValue());
         //维护一个字典来记录当前预置点位置
         
@@ -347,7 +352,7 @@ public class HkIpcController {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "e");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
         TcpClient tcpClient = new TcpClient(ipc);
         tcpClient.right();
         return new ApiResult<>(true,"i do not know if the robot arrived");
@@ -360,7 +365,7 @@ public class HkIpcController {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "d");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
         TcpClient tcpClient = new TcpClient(ipc);
         tcpClient.left();
         return new ApiResult<>(true,"i do not know if the robot arrived");
@@ -471,7 +476,7 @@ public class HkIpcController {
             return new ApiResult<>(false, res);
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "c");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
 
         return new ApiResult<>(true, STR."pan \{direction}");
     }
@@ -495,7 +500,7 @@ public class HkIpcController {
             return new ApiResult<>(false, res);
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "b");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
 
         return new ApiResult<>(true, STR."tilt \{direction}");
     }
@@ -519,7 +524,7 @@ public class HkIpcController {
             return new ApiResult<>(false, res);
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "a");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
 
         return new ApiResult<>(true, STR."zoom \{direction}");
     }
@@ -528,6 +533,8 @@ public class HkIpcController {
         if (ipc == null) {
             return "IPC is null";
         }
+        //维护一个字典来记录当前预置点位置
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
 
         if (!"pan".equals(action) && !"tilt".equals(action) && !"zoom".equals(action)) {
             return STR."Invalid action for IPC movement: \{action}";
