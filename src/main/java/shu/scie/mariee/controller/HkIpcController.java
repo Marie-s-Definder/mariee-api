@@ -264,17 +264,27 @@ public class HkIpcController {
             if (startTime != null && endTime != null) {
                 List<Data> dataList = dataService.getByDate(startTime, endTime, robotId, deviceName);
 //                Thread.sleep(2000);
-                System.out.println(dataList.size());
+//                System.out.println(dataList.size());
+//                for (Data fruit : dataList) {
+//                    System.out.println(fruit.date);
+//                }
                 List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
                 System.out.println("queryAllData");
                 return new ApiResult<>(true, finalList);
             } else {
+//                System.out.println("--------------------");
+//                System.out.println(robotId);
+//                System.out.println(deviceName);
                 List<Data> dataList = dataService.getAllData(robotId, deviceName);
+
+//                for (Data fruit : dataList) {
+//                    System.out.println(fruit.date);
+//                }
 //                Thread.sleep(2000);
 //                dataList.forEach(element -> System.out.println(element.id));
-                System.out.println(dataList.size());
+//                System.out.println(dataList.size());
                 List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
-                System.out.println("queryAllData");
+//                System.out.println("queryAllData");
                 return new ApiResult<>(true, finalList);
             }
         } catch (Exception e) {
@@ -336,38 +346,31 @@ public class HkIpcController {
         one.status = TempBefore.status;
     }
     public void add2Data(DataOne one, Data TempBefore, int index) {
-        switch (index){
-            case 1:
-                one.name1 = TempBefore.name;
-                one.result1 = TempBefore.result;
-                break;
-            case 2:
-                one.name2 = TempBefore.name;
-                one.result2 = TempBefore.result;
-                break;
-            case 3:
-                one.name3 = TempBefore.name;
-                one.result3 = TempBefore.result;
-                break;
-            case 4:
-                one.name4 = TempBefore.name;
-                one.result4 = TempBefore.result;
-                break;
-            case 5:
-                one.name5 = TempBefore.name;
-                one.result5 = TempBefore.result;
-                break;
-            case 6:
-                one.name6 = TempBefore.name;
-                one.result6 = TempBefore.result;
-                break;
-            case 7:
-                one.name7 = TempBefore.name;
-                one.result7 = TempBefore.result;
-                break;
-            default:
-                System.out.println("Wrong index");
+        if(TempBefore.name.contains("旋钮")){
+            one.name1 = TempBefore.name;
+            one.result1 = TempBefore.result;
+        }else if(TempBefore.name.contains("ICU排风机运行指示")){
+            one.name2 = TempBefore.name;
+            one.result2 = TempBefore.result;
+        }else if(TempBefore.name.contains("风机停止指示")){
+            one.name3 = TempBefore.name;
+            one.result3 = TempBefore.result;
+        }else if(TempBefore.name.contains("风机运行指示")){
+            one.name4 = TempBefore.name;
+            one.result4 = TempBefore.result;
+        }else if(TempBefore.name.contains("ICU排风机故障指示")){
+            one.name5 = TempBefore.name;
+            one.result5 = TempBefore.result;
+        }else if(TempBefore.name.contains("风机防火阀动作指示")){
+            one.name6 = TempBefore.name;
+            one.result6 = TempBefore.result;
+        }else if(TempBefore.name.contains("风机变频器故障指示")){
+            one.name7 = TempBefore.name;
+            one.result7 = TempBefore.result;
         }
+
+
+
     }
 
     // 根据楼栋、楼层、页码、每页的数量返回机器人的信息
