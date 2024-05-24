@@ -284,26 +284,14 @@ public class HkIpcController {
         try {
             if (startTime != null && endTime != null) {
                 List<Data> dataList = dataService.getByDate(startTime, endTime, robotId, deviceName);
-//                Thread.sleep(2000);
-//                System.out.println(dataList.size());
-//                for (Data fruit : dataList) {
-//                    System.out.println(fruit.date);
-//                }
+
                 List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
                 System.out.println("queryAllData");
                 return new ApiResult<>(true, finalList);
             } else {
-//                System.out.println("--------------------");
-//                System.out.println(robotId);
-//                System.out.println(deviceName);
+
                 List<Data> dataList = dataService.getAllData(robotId, deviceName);
 
-//                for (Data fruit : dataList) {
-//                    System.out.println(fruit.date);
-//                }
-//                Thread.sleep(2000);
-//                dataList.forEach(element -> System.out.println(element.id));
-//                System.out.println(dataList.size());
                 List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
 //                System.out.println("queryAllData");
                 return new ApiResult<>(true, finalList);
@@ -322,6 +310,8 @@ public class HkIpcController {
         * 先塞一个进去
         * */
         int index = 1;
+        Long statusFlag = TempBefore.status;
+
         add2Data(one,TempBefore,index);
         add2OtherData(one,TempBefore);
 
@@ -333,12 +323,17 @@ public class HkIpcController {
             * 如果为False，则说明大于60秒该建立新的one用来塞
             * 如果为true，则说明继续塞到one里面
             * */
+            if(TempNow.status == 1){
+                statusFlag = 1L;
+            }
             if(CompareData(TempBefore, TempNow) ){
                 add2Data(one, TempNow, index);
             } else {
                 index = 1;
+                one.status = statusFlag;
                 aloneList.add(one);
                 one = new DataOne();
+                statusFlag = TempBefore.status;
                 add2Data(one, TempNow, index);
                 add2OtherData(one,TempBefore);//添加其他信息
             }
@@ -364,7 +359,7 @@ public class HkIpcController {
         one.robotid = TempBefore.robotid;
         one.getby = TempBefore.getby;
         one.imgpath = TempBefore.imgpath;
-        one.status = TempBefore.status;
+//        one.status = TempBefore.status;
     }
     public void add2Data(DataOne one, Data TempBefore, int index) {
         if(TempBefore.name.contains("旋钮")){
