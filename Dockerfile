@@ -10,7 +10,7 @@ RUN chmod +x ./mvnw
 
 ENV MAVEN_OPTS="-Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT -Dsun.net.client.defaultReadTimeout=5000 -Dsun.net.client.defaultConnectTimeout=500 -Dmaven.repo.local=/cache/.m2"
 
-RUN --mount=type=cache,target=/cache/.m2 ./mvnw package
+# RUN --mount=type=cache,target=/cache/.m2 ./mvnw package
 
 FROM eclipse-temurin:21.0.2_13-jre-alpine
 
