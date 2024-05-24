@@ -170,6 +170,12 @@ public class HkIpcController {
 
     @GetMapping("/stopTimer")
     public ApiResult<String> stopTimer(@RequestParam("id") Long id) {
+        // get camera
+        HkIpc ipc = this.hkIpcService.getById(id);
+        if (ipc == null) {
+            return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
+        }
+
         if (scheduleMap.containsKey(id.toString())) {
             ScheduledFuture<?> scheduledFuture = scheduleMap.get(id.toString()).getScheduledFuture();
             if (scheduledFuture != null) {
@@ -177,6 +183,21 @@ public class HkIpcController {
                 scheduleMap.remove(id.toString());
                 System.out.println("stop timer for robot:" + "id");
                 TempPreset.robotid_preset.put(String.valueOf(id), "");
+
+                //restart timer
+                AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
+                Runnable restartTimer = () -> restarttimer(autoService,ipc,id);
+                PeriodicTrigger periodicTrigger = new PeriodicTrigger(10, TimeUnit.MINUTES);
+
+                ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(restartTimer, periodicTrigger);
+
+                ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
+                scheduledFutureHolder.setScheduledFuture(schedule);
+                scheduledFutureHolder.setRunnableClass(restartTimer.getClass());
+                scheduledFutureHolder.setinterval(10L);
+
+                scheduleMap.put(STR."re\{id.toString()}",scheduledFutureHolder);
+
                 return new ApiResult<>(true,"stop service for robot: " + id + " successful!");
             }
         }
@@ -721,5 +742,27 @@ public class HkIpcController {
                 .build();
     }
 
+    public void restarttimer(AutoService autoService, HkIpc ipc, Long robotId){
+        if (scheduleMap.containsKey(STR."re\{robotId.toString()}")) {
+
+            ScheduledFuture<?> scheduledFuture = scheduleMap.get(STR."re\{robotId.toString()}").getScheduledFuture();
+            scheduledFuture.cancel(false);
+            scheduleMap.remove(STR."re\{robotId.toString()}");
+
+            PeriodicTrigger periodicTrigger = new PeriodicTrigger(ipc.interval_time, TimeUnit.MINUTES);
+
+            ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, periodicTrigger);
+
+            ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
+            scheduledFutureHolder.setScheduledFuture(schedule);
+            scheduledFutureHolder.setRunnableClass(autoService.getClass());
+            scheduledFutureHolder.setinterval(ipc.interval_time);
+
+            scheduleMap.put(robotId.toString(),scheduledFutureHolder);
+            System.out.println("restart timer for robot:" + robotId);
+        }
+
+
+    }
 }
 
