@@ -188,7 +188,7 @@ public class HkIpcController {
                 AutoService autoService = new AutoService(hkIpcService, id, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
                 Runnable restartTimer = () -> restarttimer(autoService,ipc,id);
                 PeriodicTrigger periodicTrigger = new PeriodicTrigger(10, TimeUnit.MINUTES);
-
+                periodicTrigger.setInitialDelay(10);
                 ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(restartTimer, periodicTrigger);
 
                 ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
