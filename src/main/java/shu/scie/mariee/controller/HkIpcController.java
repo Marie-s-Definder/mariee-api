@@ -26,6 +26,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
@@ -262,20 +263,22 @@ public class HkIpcController {
         try {
             if (startTime != null && endTime != null) {
                 List<Data> dataList = dataService.getByDate(startTime, endTime, robotId, deviceName);
-                Thread.sleep(1000);
+//                Thread.sleep(2000);
                 System.out.println(dataList.size());
                 List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
                 System.out.println("queryAllData");
                 return new ApiResult<>(true, finalList);
             } else {
                 List<Data> dataList = dataService.getAllData(robotId, deviceName);
-                Thread.sleep(1000);
+//                Thread.sleep(2000);
+//                dataList.forEach(element -> System.out.println(element.id));
                 System.out.println(dataList.size());
                 List<DataOne> finalList = CutSeven2One(dataList); //处理后送给前端
                 System.out.println("queryAllData");
                 return new ApiResult<>(true, finalList);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             System.out.println(" get no data！");
             return new ApiResult<>(false, null);
         }
@@ -294,11 +297,12 @@ public class HkIpcController {
         for (int i = 1; i < allist.size(); i++) {
             index++;
             Data TempNow = allist.get(i);
+
             /*
             * 如果为False，则说明大于60秒该建立新的one用来塞
             * 如果为true，则说明继续塞到one里面
             * */
-            if(CompareData(TempBefore, TempNow)){
+            if(CompareData(TempBefore, TempNow) ){
                 add2Data(one, TempNow, index);
             } else {
                 index = 1;
@@ -321,12 +325,15 @@ public class HkIpcController {
         }
     }
     public void add2OtherData(DataOne one, Data TempBefore) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        // 格式化 Date 对象为字符串
         one.id = TempBefore.id;
-        one.date = TempBefore.date;
+        one.date = sdf.format(TempBefore.date);
         one.devicename = TempBefore.devicename;
         one.robotid = TempBefore.robotid;
         one.getby = TempBefore.getby;
         one.imgpath = TempBefore.imgpath;
+        one.status = TempBefore.status;
     }
     public void add2Data(DataOne one, Data TempBefore, int index) {
         switch (index){
@@ -396,13 +403,13 @@ public class HkIpcController {
         if (ipc == null) {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{robotId}");
         }
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(presetId));
+
         // go to preset
         Preset preset = presetRepository.findPresetById(presetId);
         TcpClient tcpClient = new TcpClient(ipc);
-
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(preset.device.intValue()));
         tcpClient.gotoPresetPoint(preset.device.intValue());
-        //维护一个字典来记录当前预置点位置
+
         
 
         // set ptz of camera

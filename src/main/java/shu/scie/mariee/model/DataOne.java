@@ -16,7 +16,7 @@ import java.util.Date;
 
     public String devicename;//设备名称
 
-    public Date date;
+    public String date;
 
     public String name1;//数据名称
     public String result1;
@@ -44,4 +44,5 @@ import java.util.Date;
     public String imgpath;
 
     public Long getby;
+
 }

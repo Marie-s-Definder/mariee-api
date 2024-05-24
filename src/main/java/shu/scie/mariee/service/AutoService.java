@@ -111,7 +111,7 @@ public class AutoService implements Runnable {
             }
             // go to presets
             // 哈希表中转一下
-            TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(i+1));
+            TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(preset.device.intValue()));
 
             SlideService.gotoPresetPoint(preset.device.intValue());
 
