@@ -314,31 +314,37 @@ public class HkIpcController {
 
         add2Data(one,TempBefore,index);
         add2OtherData(one,TempBefore);
-
+//        System.out.println(allist.size());
         for (int i = 1; i < allist.size(); i++) {
-            index++;
+
             Data TempNow = allist.get(i);
 
             /*
             * 如果为False，则说明大于60秒该建立新的one用来塞
             * 如果为true，则说明继续塞到one里面
             * */
+//            System.out.println(TempNow.name);
             if(TempNow.status == 1){
                 statusFlag = 1L;
             }
             if(CompareData(TempBefore, TempNow) ){
+                index++;
                 add2Data(one, TempNow, index);
             } else {
-                index = 1;
+//                System.out.println("--------------");
                 one.status = statusFlag;
-                aloneList.add(one);
+                if(index>=7) {
+                    aloneList.add(one);
+                }
                 one = new DataOne();
                 statusFlag = TempBefore.status;
+                index = 1;
                 add2Data(one, TempNow, index);
-                add2OtherData(one,TempBefore);//添加其他信息
+                add2OtherData(one, TempNow);//添加其他信息
             }
 
             TempBefore = TempNow;
+
         }
         return aloneList;
     }
