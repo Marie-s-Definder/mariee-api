@@ -306,40 +306,35 @@ public class HkIpcController {
         List<DataOne> aloneList = new ArrayList<DataOne>();
         Data TempBefore = allist.get(0);
         DataOne one = new DataOne();
-        /*
-        * 先塞一个进去
-        * */
-        int index = 1;
-        Long statusFlag = TempBefore.status;
 
-        add2Data(one,TempBefore,index);
+        int index = 1;
+        Long statusFlag = TempBefore.status;//七个里面有一个错误就认为错误
+        // add2Data 加TempBefore的name和result到one里面
+        add2Data(one,TempBefore);
+        // add2OtherData 加 TempBefore的id,date,devicename,robotid,getby,imgpath到one里面
         add2OtherData(one,TempBefore);
-//        System.out.println(allist.size());
         for (int i = 1; i < allist.size(); i++) {
 
             Data TempNow = allist.get(i);
 
-            /*
-            * 如果为False，则说明大于60秒该建立新的one用来塞
-            * 如果为true，则说明继续塞到one里面
-            * */
-//            System.out.println(TempNow.name);
-            if(TempNow.status == 1){
-                statusFlag = 1L;
-            }
             if(CompareData(TempBefore, TempNow) ){
+                if(TempNow.status == 1){
+                    statusFlag = 1L;
+                }
                 index++;
-                add2Data(one, TempNow, index);
+                add2Data(one, TempNow);
             } else {
-//                System.out.println("--------------");
+                if(TempNow.status == 1){
+                    statusFlag = 1L;
+                }
                 one.status = statusFlag;
                 if(index>=7) {
                     aloneList.add(one);
                 }
                 one = new DataOne();
-                statusFlag = TempBefore.status;
+                statusFlag = TempBefore.status;//重置flag
                 index = 1;
-                add2Data(one, TempNow, index);
+                add2Data(one, TempNow);
                 add2OtherData(one, TempNow);//添加其他信息
             }
 
@@ -367,7 +362,7 @@ public class HkIpcController {
         one.imgpath = TempBefore.imgpath;
 //        one.status = TempBefore.status;
     }
-    public void add2Data(DataOne one, Data TempBefore, int index) {
+    public void add2Data(DataOne one, Data TempBefore) {
         if(TempBefore.name.contains("旋钮")){
             one.name1 = TempBefore.name;
             one.result1 = TempBefore.result;
