@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface IotreadonlyRepository extends CrudRepository<Iotreadonly,Long>{
 
-    List<Iotreadonly> findByDescriptionNotContainingAndPresetid(String name, Long presetid);
+    List<Iotreadonly> findByDescriptionNotContainingAndPresetidOrderByIdAsc(String name, Long presetid);
 
 }

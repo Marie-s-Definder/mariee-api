@@ -57,6 +57,8 @@ public class HkIpcController {
 
     private final IotreadonlyRepository iotreadonlyRepository;
 
+    private IOTService IotService;
+
     public HkIpcController(HkIpcService hkIpcService, HkIpcRepository hkIpcRepository, RobotService robotService,
                            DataService dataService, DeviceService deviceService, ThreadPoolTaskScheduler threadPoolTaskScheduler,
                            PresetRepository presetRepository, DataInfoRepository dataInfoRepository, IotreadonlyRepository iotreadonlyRepository) {
@@ -70,6 +72,7 @@ public class HkIpcController {
         this.presetRepository = presetRepository;
         this.dataInfoRepository = dataInfoRepository;
         this.iotreadonlyRepository = iotreadonlyRepository;
+        this.IotService = new IOTService("obix","Obix123456");
     }
 
     @GetMapping("/startTimer")
@@ -203,6 +206,92 @@ public class HkIpcController {
         }
         return new ApiResult<>(false,"failed to stop service for robot: " + id );
     }
+    @GetMapping("/queryIOT")
+    public ApiResult<List<String>> queryIOT(@RequestParam("id") Long id){
+        if (TempPreset.robotid_preset.containsKey(String.valueOf(id))) {
+            if (!TempPreset.robotid_preset.get(String.valueOf(id)).isEmpty()){
+                List<String> returnList = new ArrayList<>();
+                Long preset_deviceid = Long.valueOf(TempPreset.robotid_preset.get(String.valueOf(id)));
+                Long preset_id= presetRepository.findPresetById(preset_deviceid).device;
+                String preset_deviceName=deviceService.getDeviceById(preset_id).name;
+                List<Data> dataList = dataService.getAllData(id, preset_deviceName);
+                for (int j = 0; j < dataList.size(); j++){
+                    Data data = dataList.get(j);
+                    String name = data.name;
+                    if(name.contains("风机运行指示") && name.contains("CAHU")){
+                        String value = data.result;
+                        if(value.contains("1")){
+                            returnList.add("运行");
+                            returnList.add("正常");
+                        }
+                        else {
+                            returnList.add("停止");
+                            returnList.add("报警");
+                        }
+                        break;
+                    }
+                }
+
+                for (int j = 0; j < dataList.size(); j++){
+                    Data data = dataList.get(j);
+                    String name = data.name;
+                    if(name.contains("排风机运行指示")){
+                        String value = data.result;
+                        if(value.contains("1")){
+                            returnList.add("运行");
+                            returnList.add("正常");
+                        }
+                        else {
+                            returnList.add("停止");
+                            returnList.add("报警");
+                        }
+                        break;
+                    }
+                }
+
+                List<Iotreadonly> Iotreads = iotreadonlyRepository.findByDescriptionNotContainingAndPresetidOrderByIdAsc("读",preset_deviceid);
+
+                Iotreadonly Iotread = Iotreads.get(0);
+                String Iot_url = Iotread.url;
+                Boolean valueb = IotService.readIOTBool(Iot_url);
+                if(valueb){
+                    returnList.add("浸水");
+                }
+                else {
+                    returnList.add("正常");
+                }
+
+                Iotread = Iotreads.get(1);
+                Iot_url = Iotread.url;
+                Float value = IotService.readIOTReal(Iot_url);
+                returnList.add(String.format("%.1f °C",value));
+
+                Iotread = Iotreads.get(2);
+                Iot_url = Iotread.url;
+                value = IotService.readIOTReal(Iot_url);
+                returnList.add(String.format("%.0f %%",value));
+
+                Iotread = Iotreads.get(3);
+                Iot_url = Iotread.url;
+                value = IotService.readIOTReal(Iot_url);
+                returnList.add(String.format("%.1f °C",value));
+
+                Iotread = Iotreads.get(4);
+                Iot_url = Iotread.url;
+                value = IotService.readIOTReal(Iot_url);
+                returnList.add(String.format("%.0f Pa",value));
+
+                Iotread = Iotreads.get(5);
+                Iot_url = Iotread.url;
+                value = IotService.readIOTReal(Iot_url);
+                returnList.add(String.format("%.0f ppm",value));
+
+                return new ApiResult<>(true,returnList);
+            }
+
+        }
+        return new ApiResult<>(false,null);
+    }
 
     @PostMapping("/create")
     public ApiResult<String> create(@RequestBody HkIpc hkIpc) {
@@ -324,9 +413,9 @@ public class HkIpcController {
                 index++;
                 add2Data(one, TempNow);
             } else {
-                if(TempNow.status == 1){
-                    statusFlag = 1L;
-                }
+//                if(TempNow.status == 1){
+//                    statusFlag = 1L;
+//                }
                 one.status = statusFlag;
                 if(index>=7) {
                     aloneList.add(one);
@@ -458,7 +547,7 @@ public class HkIpcController {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "e");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
         TcpClient tcpClient = new TcpClient(ipc);
         tcpClient.right();
         return new ApiResult<>(true,"i do not know if the robot arrived");
@@ -471,7 +560,7 @@ public class HkIpcController {
             return new ApiResult<>(false, STR."HkIpc Not Found with ID: \{id}");
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "d");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
         TcpClient tcpClient = new TcpClient(ipc);
         tcpClient.left();
         return new ApiResult<>(true,"i do not know if the robot arrived");
@@ -582,7 +671,7 @@ public class HkIpcController {
             return new ApiResult<>(false, res);
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "c");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
 
         return new ApiResult<>(true, STR."pan \{direction}");
     }
@@ -606,7 +695,7 @@ public class HkIpcController {
             return new ApiResult<>(false, res);
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "b");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
 
         return new ApiResult<>(true, STR."tilt \{direction}");
     }
@@ -630,7 +719,7 @@ public class HkIpcController {
             return new ApiResult<>(false, res);
         }
         //维护一个字典来记录当前预置点位置
-        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "a");
+        TempPreset.robotid_preset.put(String.valueOf(ipc.id), "");
 
         return new ApiResult<>(true, STR."zoom \{direction}");
     }
