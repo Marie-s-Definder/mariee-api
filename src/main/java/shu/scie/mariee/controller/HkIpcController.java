@@ -215,6 +215,7 @@ public class HkIpcController {
                 Long preset_id= presetRepository.findPresetById(preset_deviceid).device;
                 String preset_deviceName=deviceService.getDeviceById(preset_id).name;
                 List<Data> dataList = dataService.getAllData(id, preset_deviceName);
+                returnList.add(String.format("AHU_ICU_%d",preset_deviceid));
                 for (int j = 0; j < dataList.size(); j++){
                     Data data = dataList.get(j);
                     String name = data.name;
