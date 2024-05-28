@@ -332,7 +332,7 @@ public class HkIpcController {
                     aloneList.add(one);
                 }
                 one = new DataOne();
-                statusFlag = TempBefore.status;//重置flag
+                statusFlag = TempNow.status;//重置flag
                 index = 1;
                 add2Data(one, TempNow);
                 add2OtherData(one, TempNow);//添加其他信息
