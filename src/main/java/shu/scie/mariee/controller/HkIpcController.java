@@ -324,9 +324,9 @@ public class HkIpcController {
                 index++;
                 add2Data(one, TempNow);
             } else {
-                if(TempNow.status == 1){
-                    statusFlag = 1L;
-                }
+//                if(TempNow.status == 1){
+//                    statusFlag = 1L;
+//                }
                 one.status = statusFlag;
                 if(index>=7) {
                     aloneList.add(one);
