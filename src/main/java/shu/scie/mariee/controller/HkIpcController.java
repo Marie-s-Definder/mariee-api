@@ -830,22 +830,24 @@ public class HkIpcController {
 
     public void restarttimer(AutoService autoService, HkIpc ipc, Long robotId){
         if (scheduleMap.containsKey(STR."re\{robotId.toString()}")) {
+            if (!scheduleMap.containsKey(robotId.toString())){
+                ScheduledFuture<?> scheduledFuture = scheduleMap.get(STR."re\{robotId.toString()}").getScheduledFuture();
+                scheduledFuture.cancel(false);
+                scheduleMap.remove(STR."re\{robotId.toString()}");
 
-            ScheduledFuture<?> scheduledFuture = scheduleMap.get(STR."re\{robotId.toString()}").getScheduledFuture();
-            scheduledFuture.cancel(false);
-            scheduleMap.remove(STR."re\{robotId.toString()}");
+                PeriodicTrigger periodicTrigger = new PeriodicTrigger(ipc.interval_time, TimeUnit.MINUTES);
 
-            PeriodicTrigger periodicTrigger = new PeriodicTrigger(ipc.interval_time, TimeUnit.MINUTES);
+                ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, periodicTrigger);
 
-            ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, periodicTrigger);
+                ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
+                scheduledFutureHolder.setScheduledFuture(schedule);
+                scheduledFutureHolder.setRunnableClass(autoService.getClass());
+                scheduledFutureHolder.setinterval(ipc.interval_time);
 
-            ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
-            scheduledFutureHolder.setScheduledFuture(schedule);
-            scheduledFutureHolder.setRunnableClass(autoService.getClass());
-            scheduledFutureHolder.setinterval(ipc.interval_time);
+                scheduleMap.put(robotId.toString(),scheduledFutureHolder);
+                System.out.println("restart timer for robot:" + robotId);
+            }
 
-            scheduleMap.put(robotId.toString(),scheduledFutureHolder);
-            System.out.println("restart timer for robot:" + robotId);
         }
 
 
