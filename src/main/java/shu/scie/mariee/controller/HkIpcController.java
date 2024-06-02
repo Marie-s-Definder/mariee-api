@@ -208,13 +208,17 @@ public class HkIpcController {
     }
     @GetMapping("/queryIOT")
     public ApiResult<List<String>> queryIOT(@RequestParam("id") Long id){
+
         if (TempPreset.robotid_preset.containsKey(String.valueOf(id))) {
+
             if (!TempPreset.robotid_preset.get(String.valueOf(id)).isEmpty()){
                 List<String> returnList = new ArrayList<>();
                 Long preset_deviceid = Long.valueOf(TempPreset.robotid_preset.get(String.valueOf(id)));
+//                System.out.println("queryIOT的预置点"+preset_deviceid);
                 Long preset_id= presetRepository.findPresetById(preset_deviceid).device;
                 String preset_deviceName=deviceService.getDeviceById(preset_id).name;
                 List<Data> dataList = dataService.getAllData(id, preset_deviceName);
+
                 returnList.add(String.format("AHU_ICU_%d",preset_deviceid));
                 for (int j = 0; j < dataList.size(); j++){
                     Data data = dataList.get(j);
@@ -286,7 +290,7 @@ public class HkIpcController {
                 Iot_url = Iotread.url;
                 value = IotService.readIOTReal(Iot_url);
                 returnList.add(String.format("%.0f ppm",value));
-
+                returnList.add(TempPreset.need_on.get(String.valueOf(id)));//加到列表最后一个
                 return new ApiResult<>(true,returnList);
             }
 

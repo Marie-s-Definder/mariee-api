@@ -23,7 +23,7 @@ public class DataService {
 
     public List<Data> getAllData(Long robotId, String deviceName) {
         List<Data> lists = dataRepository.findAllByRobotidAndDevicenameOrderByDateDesc(robotId, deviceName);
-        System.out.println(lists.size());
+//        System.out.println(lists.size());
         return lists;
     }
 

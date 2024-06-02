@@ -80,6 +80,21 @@ public class TcpClient {
 
 
     public void gotoPresetPoint(int id){
+//        System.out.println("gotoPresetPoint的id"+id);
+        TempPreset.need_on.put(String.valueOf(id), "ON");
+//        new Thread(){
+//            @Override
+//            public void run(){
+//                try {
+//                    Thread.sleep(10000);//延迟10秒
+//                }catch (InterruptedException e){
+//                    e.printStackTrace();
+//                }finally {
+//                    TempPreset.need_on.put(String.valueOf(id), "OFF");
+//                }
+//
+//            }
+//        }.start();
         System.out.println("预置点：" + id);
         byte[] b = new byte[7];
         b[0] = (byte) 0xff;
@@ -131,6 +146,9 @@ public class TcpClient {
         }catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }finally {
+            TempPreset.need_on.put(String.valueOf(id), "OFF");
+            System.out.println(TempPreset.need_on);
         }
     }
 
