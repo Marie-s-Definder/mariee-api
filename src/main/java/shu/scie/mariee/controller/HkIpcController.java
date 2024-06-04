@@ -208,9 +208,10 @@ public class HkIpcController {
     }
     @GetMapping("/queryIOT")
     public ApiResult<List<String>> queryIOT(@RequestParam("id") Long id){
-
+        System.out.println("已接收");
+        System.out.println(TempPreset.robotid_preset.containsKey(String.valueOf(id)));
+        System.out.println(TempPreset.robotid_preset.get(TempPreset.robotid_preset.get(String.valueOf(id))));
         if (TempPreset.robotid_preset.containsKey(String.valueOf(id))) {
-
             if (!TempPreset.robotid_preset.get(String.valueOf(id)).isEmpty()){
                 List<String> returnList = new ArrayList<>();
                 Long preset_deviceid = Long.valueOf(TempPreset.robotid_preset.get(String.valueOf(id)));

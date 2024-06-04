@@ -83,6 +83,7 @@ public class AutoService implements Runnable {
                 return;
             }
             Preset preset = presets.get(i);
+            TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(preset.device.intValue()));
 
             String dataInfoId = preset.dataInfoId;
             Long[] dataInfoIdList = stringToArray(dataInfoId);
@@ -112,7 +113,7 @@ public class AutoService implements Runnable {
             }
             // go to presets
             // 哈希表中转一下
-            TempPreset.robotid_preset.put(String.valueOf(ipc.id), String.valueOf(preset.device.intValue()));
+
 
             SlideService.gotoPresetPoint(preset.device.intValue());
 
