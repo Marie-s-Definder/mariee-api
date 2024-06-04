@@ -7,8 +7,9 @@ COPY ./ ./
 RUN chmod +x ./mvnw
 
 # ENV PROXY_HOST= PROXY_PORT=
-#-Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT
-ENV MAVEN_OPTS="-Dsun.net.client.defaultReadTimeout=5000 -Dsun.net.client.defaultConnectTimeout=500 -Dmaven.repo.local=/cache/.m2"
+
+#ENV MAVEN_OPTS="-Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT -Dsun.net.client.defaultReadTimeout=5000 -Dsun.net.client.defaultConnectTimeout=500 -Dmaven.repo.local=/cache/.m2"
+ENV MAVEN_OPTS="-Dmirrorof=* -Drepository.url=https://maven.aliyun.com/repository/public -Dsun.net.client.defaultReadTimeout=5000 -Dsun.net.client.defaultConnectTimeout=500 -Dmaven.repo.local=/cache/.m2"
 
 RUN --mount=type=cache,target=/cache/.m2 ./mvnw package
 
