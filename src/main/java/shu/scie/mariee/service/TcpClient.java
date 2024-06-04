@@ -152,7 +152,7 @@ public class TcpClient {
                 @Override
                 public void run(){
                     try {
-                        Thread.sleep(90000);//延迟10秒
+                        Thread.sleep(40000);//延迟10秒
                     }catch (InterruptedException e){
                         e.printStackTrace();
                     }finally {
