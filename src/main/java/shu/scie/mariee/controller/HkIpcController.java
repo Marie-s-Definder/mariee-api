@@ -291,6 +291,7 @@ public class HkIpcController {
                 Iot_url = Iotread.url;
                 value = IotService.readIOTReal(Iot_url);
                 returnList.add(String.format("%.0f ppm",value));
+                System.out.println("id:"+id);
                 returnList.add(TempPreset.need_on.get(String.valueOf(id)));//加到列表最后一个
                 return new ApiResult<>(true,returnList);
             }
