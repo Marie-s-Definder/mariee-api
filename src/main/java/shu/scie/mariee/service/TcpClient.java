@@ -158,14 +158,14 @@ public class TcpClient {
                     }catch (InterruptedException e){
                         e.printStackTrace();
                     }finally {
-                        System.out.println(TempPreset.need_on);
+//                        System.out.println(TempPreset.need_on);
                         TempPreset.need_on.put(String.valueOf(id), "OFF");
-                        System.out.println(TempPreset.need_on);
+//                        System.out.println(TempPreset.need_on);
                     }
 
                 }
             }.start();
-            System.out.println(TempPreset.need_on);
+//            System.out.println(TempPreset.need_on);
         }
     }
 
