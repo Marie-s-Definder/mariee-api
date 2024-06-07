@@ -294,7 +294,7 @@ public class HkIpcController {
                 System.out.println("TempPreset.need_on:");
                 System.out.println(TempPreset.need_on);
                 System.out.println("id:"+id);
-                returnList.add(TempPreset.need_on.get(String.valueOf(id)));//加到列表最后一个
+                returnList.add(TempPreset.need_on.get(TempPreset.robotid_preset.get(String.valueOf(id))));//加到列表最后一个
                 return new ApiResult<>(true,returnList);
             }
 
