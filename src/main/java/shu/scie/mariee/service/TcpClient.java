@@ -147,12 +147,14 @@ public class TcpClient {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }finally {
-            TempPreset.need_on.put(String.valueOf(id), "ON");
+
             new Thread(){
                 @Override
                 public void run(){
                     try {
-                        Thread.sleep(30000);//延迟10秒
+                        Thread.sleep(5000);
+                        TempPreset.need_on.put(String.valueOf(id), "ON");
+                        Thread.sleep(30000);//延迟30秒
                     }catch (InterruptedException e){
                         e.printStackTrace();
                     }finally {
