@@ -73,6 +73,22 @@ public class HkIpcController {
         this.dataInfoRepository = dataInfoRepository;
         this.iotreadonlyRepository = iotreadonlyRepository;
         this.IotService = new IOTService("obix","Obix123456");
+        Iterable<HkIpc> all_ipc = this.hkIpcRepository.findAll();
+        for (HkIpc hkIpc : all_ipc) {
+            AutoService autoService = new AutoService(hkIpcService, hkIpc.id, presetRepository, dataInfoRepository, deviceService, dataService, iotreadonlyRepository);
+
+            PeriodicTrigger periodicTrigger = new PeriodicTrigger(hkIpc.interval_time, TimeUnit.MINUTES);
+
+            ScheduledFuture<?> schedule = threadPoolTaskScheduler.schedule(autoService, periodicTrigger);
+
+            ScheduledFutureHolder scheduledFutureHolder = new ScheduledFutureHolder();
+            scheduledFutureHolder.setScheduledFuture(schedule);
+            scheduledFutureHolder.setRunnableClass(autoService.getClass());
+            scheduledFutureHolder.setinterval(hkIpc.interval_time);
+
+            scheduleMap.put(hkIpc.id.toString(),scheduledFutureHolder);
+            System.out.println("start timer with robot id: " + hkIpc.id);
+        }
     }
 
     @GetMapping("/startTimer")
