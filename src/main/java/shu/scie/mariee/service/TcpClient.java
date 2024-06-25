@@ -130,7 +130,7 @@ public class TcpClient {
         c[5] = (byte) id;
         //q前面值相加对256取余数，校驗
         sum=0;
-        for(int i=1;i<6;i++){
+        for(int i=2;i<6;i++){
             sum=sum+c[i];
         }
         y=(sum%256)+1;
