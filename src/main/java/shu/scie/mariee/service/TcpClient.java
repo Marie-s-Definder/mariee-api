@@ -120,6 +120,23 @@ public class TcpClient {
         int y=sum%256;
 
         b[6] = (byte) y;
+
+        byte[] c = new byte[7];
+        c[0] = (byte) 0xff;
+        c[1] = (byte) 0x1a;
+        c[2] = (byte) 0x00;
+        c[3] = (byte) 0x07;
+        c[4] = (byte) 0x00;
+        c[5] = (byte) id;
+        //q前面值相加对256取余数，校驗
+        sum=0;
+        for(int i=1;i<6;i++){
+            sum=sum+c[i];
+        }
+        y=(sum%256)+1;
+        c[6] = (byte) y;
+        String cString= bytesToHexString(c);
+
         try {
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
 
@@ -132,15 +149,24 @@ public class TcpClient {
             byte[] bytes = new byte[1]; // 一次读取一个byte
             String ret = "";
             StringBuilder ensure = new StringBuilder();
-            while (ips.read(bytes) != -1) {
-                ret = bytesToHexString(bytes);
-                ensure.append(ret);
-                if(ensure.length() == 14) {
-                    if(ensure.toString().startsWith("ff1a0007000")) {
-                        System.out.println(ensure.toString());
-                        break;
+
+            long startTime = System.currentTimeMillis();
+            while (true) {
+                if (ips.read(bytes) != -1) {
+                    ret = bytesToHexString(bytes);
+                    ensure.append(ret);
+                    if (ensure.length() == 14) {
+                        if (ensure.toString().equals(cString)) {
+                            System.out.println(ensure.toString());
+                            break;
+                        }
+                        ensure.delete(0, 14);
                     }
-                    ensure.delete(0,14);
+                }
+                long currentTime = System.currentTimeMillis(); // 获取当前时间
+                if ((currentTime - startTime) / 1000 >= 1200) { // 检查是否超过20分钟
+                    System.out.println("超时退出");
+                    break;
                 }
             }
         }catch (IOException e) {
