@@ -76,6 +76,7 @@ public class AutoService implements Runnable {
         List<Preset> presets = presetRepository.findAllByRobot_id(id);
         System.out.println("Time is:" + new Date());
         System.out.println("presetssize:" + presets.size());
+
         for (int i = 0; i < presets.size(); i++) {
 
             if (Thread.currentThread().isInterrupted()) {
@@ -111,11 +112,35 @@ public class AutoService implements Runnable {
                 DataInfo dataInfo1 = dataInfoRepository.findAllById(dataInfo);
                 dataInfos.add(dataInfo1);
             }
+            /**
+             * 这段代码是每到一个预置点就向左移动一下，摄像头角度向左动一下，焦距向前拉一下，然后再去预置点
+             */
+            //向左滑动一下
+            TcpClient tcpClient = new TcpClient(ipc);
+            tcpClient.right();
+            //向左动一下摄像头
+            String res = this.startIpcMove(ipc, "pan", "left");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            res = this.stopIpcMove(ipc, "pan");
+            //焦距往前拉一下
+            String res1 = this.startIpcMove(ipc, "zoom", "in");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            res1 = this.stopIpcMove(ipc, "zoom");
+
             // go to presets
             // 哈希表中转一下
-
-
-            SlideService.gotoPresetPoint(preset.device.intValue());
+            /**
+             * 滑轨移动到指定位置
+             */
+            SlideService.gotoPresetPoint(preset.device.intValue());//给预置点的编号
 
             String requestBody1 = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><zoom>-100</zoom></PTZData>";
 
@@ -143,7 +168,7 @@ public class AutoService implements Runnable {
             }
             if (moveRes.statusCode() == HttpStatus.OK.value()) {
                 try {
-                    Thread.sleep(30000);
+                    Thread.sleep(32000);
                     ApiResult<String> picPath = takePic(ipc);
                     moveRes1 = this.httpClient.send(moveReq1, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
                     String picPath1 = picPath.data;
@@ -169,7 +194,7 @@ public class AutoService implements Runnable {
     }//
 
     // make HTTP request
-    private HttpRequest makeIpcRequest(HkIpc ipc, String body) throws URISyntaxException {
+    private HttpRequest makeIpcRequest(HkIpc ipc, String body) throws URISyntaxException {//其实就是absolute
         return HttpRequest.newBuilder()
                 .uri(new URI(STR."http://\{ipc.ip}/ISAPI/PTZCtrl/channels/\{ipc.ptzChannel}/absolute"))
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
@@ -178,7 +203,7 @@ public class AutoService implements Runnable {
                 .build();
     }
 
-    private HttpRequest makeIpcZoomRequest(HkIpc ipc, String body) throws URISyntaxException {
+    private HttpRequest makeIpcZoomRequest(HkIpc ipc, String body) throws URISyntaxException {//是makeIpcRequest
         return HttpRequest.newBuilder()
                 .uri(new URI(STR."http://\{ipc.ip}/ISAPI/PTZCtrl/channels/\{ipc.ptzChannel}/continuous"))
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
@@ -373,6 +398,98 @@ public class AutoService implements Runnable {
             System.out.println(e.getMessage());
         }
 
+    }
+
+    /**
+     * 这段代码直接复制的HkIpcController，用于完成每次到预置点前就乱动一下的任务
+     * @param ipc
+     * @param action
+     * @param direction
+     * @return
+     */
+    private String startIpcMove(HkIpc ipc, String action, String direction) {
+        if (ipc == null) {
+            return "IPC is null";
+        }
+
+        if (!"pan".equals(action) && !"tilt".equals(action) && !"zoom".equals(action)) {
+            return STR."Invalid action for IPC movement: \{action}";
+        }
+
+        if ("pan".equals(action)) {
+            if (!"left".equals(direction) && !"right".equals(direction)) {
+                return STR."Invalid direction for pan: \{direction}";
+            }
+        }
+        if ("tilt".equals(action)) {
+            if (!"up".equals(direction) && !"down".equals(direction)) {
+                return STR."Invalid direction for tilt: \{direction}";
+            }
+        }
+        if ("zoom".equals(action)) {
+            if (!"in".equals(direction) && !"out".equals(direction)) {
+                return STR."Invalid direction for zoom: \{direction}";
+            }
+        }
+
+        String speedPrefix = "";
+        if ("left".equals(direction) || "down".equals(direction) || "out".equals(direction)) {
+            speedPrefix = "-";
+        }
+
+        String requestBody = STR."<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><\{action}>\{speedPrefix}20</\{action}></PTZData>";
+
+        HttpRequest moveReq;
+        try {
+            moveReq = this.makeIpcRequest(ipc, requestBody);
+        } catch (URISyntaxException e) {
+            return STR."Start \{action} request failed: \{e.getMessage()}";
+        }
+
+        HttpResponse<String> moveRes;
+        try {
+            moveRes = this.httpClient.send(moveReq, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            return STR."Start \{action} request failed: \{e.getMessage()}";
+        }
+
+        if (moveRes.statusCode() == HttpStatus.OK.value()) {
+            return "";
+        } else {
+            return STR."Start \{action} request failed: \{moveRes.statusCode()}";
+        }
+
+    }
+
+    private String stopIpcMove(HkIpc ipc, String action) {
+        if (ipc == null) {
+            return "IPC is null";
+        }
+        if (!"pan".equals(action) && !"tilt".equals(action) && !"zoom".equals(action)) {
+            return STR."Invalid action for IPC movement: \{action}";
+        }
+
+        String requestBody = STR."<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><\{action}>0</\{action}></PTZData>";
+
+        HttpRequest stopReq;
+        try {
+            stopReq = this.makeIpcRequest(ipc, requestBody);
+        } catch (URISyntaxException e) {
+            return STR."Stop pan request failed: \{e.getMessage()}";
+        }
+
+        HttpResponse<String> stopRes;
+        try {
+            stopRes = this.httpClient.send(stopReq, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            return STR."Stop pan request failed: \{e.getMessage()}";
+        }
+
+        if (stopRes.statusCode() == HttpStatus.OK.value()) {
+            return "";
+        } else {
+            return STR."Stop pan request failed: \{stopRes.statusCode()}";
+        }
     }
 
 }

@@ -499,9 +499,6 @@ public class HkIpcController {
             one.name7 = TempBefore.name;
             one.result7 = TempBefore.result;
         }
-
-
-
     }
 
     // 根据楼栋、楼层、页码、每页的数量返回机器人的信息
