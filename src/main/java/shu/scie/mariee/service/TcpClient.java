@@ -10,7 +10,12 @@ import java.net.UnknownHostException;
 public class TcpClient {
 
     private Socket s;
+    private HkIpc gloIpc;
     public TcpClient(HkIpc ipc) {
+        gloIpc = ipc;
+    }
+    public void getSocket(HkIpc ipc){
+        // Socket s = null;
         if (ipc == null) {
             System.out.println("no robot select!");
         }else {
@@ -19,7 +24,7 @@ public class TcpClient {
 
             try {
                 s = new Socket();
-                s.connect(new InetSocketAddress(ip,port.intValue()));
+                s.connect(new InetSocketAddress(ip,port.intValue()), 10000);
                 System.out.println("connected to " + ip);
 
             } catch (UnknownHostException e) {
@@ -30,6 +35,7 @@ public class TcpClient {
                 e.printStackTrace();
             }
         }
+        
     }
 
 //    public static void main(String[] args) throws UnknownHostException, IOException {
@@ -95,6 +101,9 @@ public class TcpClient {
 //
 //            }
 //        }.start();
+        if( s == null || s.isClosed() || !s.isConnected()){
+            getSocket(gloIpc);
+        }
         System.out.println("预置点：" + id);
         byte[] b = new byte[7];
         b[0] = (byte) 0xff;
@@ -136,10 +145,9 @@ public class TcpClient {
         y=(sum%256)+1;
         c[6] = (byte) y;
         String cString= bytesToHexString(c);
-
+    
         try {
             DataOutputStream out = new DataOutputStream(s.getOutputStream());
-
             BufferedInputStream bis = new BufferedInputStream(s.getInputStream());
             DataInputStream ips = new DataInputStream(bis);
 
@@ -238,6 +246,9 @@ public class TcpClient {
     }
 
     private void request(byte[] b) {
+        if( s == null || s.isClosed() || !s.isConnected()){
+            getSocket(gloIpc);
+        }
         int sum=0;
         for(int i=1;i<6;i++){
             sum=sum+b[i];
