@@ -20,7 +20,7 @@ public class Robot {
 
     public String room;
 
-    public String name;
+    public String name;//
 
     public Long status;
 
