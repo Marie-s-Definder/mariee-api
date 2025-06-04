@@ -18,7 +18,7 @@ public class Robot {
 
     public String building;
 
-    public String room;
+    public String room;////
 
     public String name;//
 
