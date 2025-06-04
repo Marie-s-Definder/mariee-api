@@ -5,7 +5,13 @@ spring:
     username: rem
     password: qwertyuiop
     hikari:
-      max-lifetime: 60000
+      #max-lifetime: 60000
+      maximum-pool-size: 30         # 最大连接数
+      minimum-idle: 5
+      connection-timeout: 30000    # 获取连接超时时间（默认300秒）
+      idle-timeout: 600000          # 空闲连接最大存活时间（10分钟）
+      max-lifetime: 1800000         # 连接最大存活时间（30分钟）
+      leak-detection-threshold: 20000  # 20 秒没归还连接就记录日志，帮助你定位问题代码
   web:
     resources:
       static-locations: file:./data
