@@ -68,6 +68,7 @@ public class AutoService implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("AutoService start!");
         HkIpc ipc = hkIpcService.getById(id);
         if (ipc == null) {
             System.out.println("no robot select!");
@@ -93,6 +94,7 @@ public class AutoService implements Runnable {
             List<Iotreadonly> Iotreads = iotreadonlyRepository.findByDescriptionNotContainingAndPresetidOrderByIdAsc("读",preset.device);
             List<Float> Iot_value_float = new ArrayList<>();
             List<Boolean> Iot_value_bool = new ArrayList<>();
+            System.out.println("AutoService start2!");
             for (int j = 0; j < Iotreads.size(); j++){
                 Iotreadonly Iotread = Iotreads.get(j);
                 String Iot_url = Iotread.url;
@@ -106,6 +108,7 @@ public class AutoService implements Runnable {
                 }
             }
             List<JSONObject> Iotjsons = getJSONIot(Iotreads, Iot_value_float, Iot_value_bool);
+            System.out.println("AutoService start3!");
 
 
             for (Long dataInfo : dataInfoIdList) {
@@ -134,6 +137,7 @@ public class AutoService implements Runnable {
                 throw new RuntimeException(e);
             }
             res1 = this.stopIpcMove(ipc, "zoom");
+            System.out.println("AutoService start4!");
 
             // go to presets
             // 哈希表中转一下
@@ -141,6 +145,7 @@ public class AutoService implements Runnable {
              * 滑轨移动到指定位置
              */
             SlideService.gotoPresetPoint(preset.device.intValue());//给预置点的编号
+            System.out.println("AutoService start5!");
 
             String requestBody1 = "<PTZData version=\"2.0\" xmlns=\"http://www.isapi.org/ver20/XMLSchema\"><zoom>-100</zoom></PTZData>";
 
@@ -175,6 +180,7 @@ public class AutoService implements Runnable {
                     JSONObject jsonData = getJSONString(dataInfos,picPath1,Iotjsons);
                     JSONObject jsonObject = getDetections(jsonData,"http://172.16.104.254:5000/Recognition");
                     if (jsonObject.get("response") == "false") {
+                        System.out.println("WARN: Image recognition returned 'false' for preset " + preset.device + ". Current loop iteration stopped.");
                         return;
                     } else {
                         writeData(jsonObject.getJSONObject("response"), id, dataInfos);

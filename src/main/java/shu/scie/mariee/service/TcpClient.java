@@ -35,7 +35,7 @@ public class TcpClient {
                 e.printStackTrace();
             }
         }
-        
+
     }
 
 //    public static void main(String[] args) throws UnknownHostException, IOException {
@@ -86,7 +86,7 @@ public class TcpClient {
 
 
     public void gotoPresetPoint(int id){
-//        System.out.println("gotoPresetPoint的id"+id);
+        System.out.println("gotoPresetPoint的id"+id);
 //        TempPreset.need_on.put(String.valueOf(id), "ON");
 //        new Thread(){
 //            @Override
@@ -151,14 +151,20 @@ public class TcpClient {
             BufferedInputStream bis = new BufferedInputStream(s.getInputStream());
             DataInputStream ips = new DataInputStream(bis);
 
+            // 发送指令前
+            System.out.println("发送指令: " + bytesToHexString(b));
+            // 发送指令后
             out.write(b);
             out.flush();
+            System.out.println("指令已发送，等待设备响应...");
 
             byte[] bytes = new byte[1]; // 一次读取一个byte
             String ret = "";
             StringBuilder ensure = new StringBuilder();
 
             long startTime = System.currentTimeMillis();
+            System.out.println("开始时间：" + startTime);
+            // 读取数据时
             while (true) {
                 if (ips.read(bytes) != -1) {
                     ret = bytesToHexString(bytes);
