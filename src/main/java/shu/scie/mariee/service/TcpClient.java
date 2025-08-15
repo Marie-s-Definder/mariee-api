@@ -101,7 +101,7 @@ public class TcpClient {
 //
 //            }
 //        }.start();
-        if( s == null || s.isClosed() || !s.isConnected()){
+        if( s == null || s.isClosed() || !s.isConnected() || !isSocketAlive(s)){
             getSocket(gloIpc);
         }
         System.out.println("预置点：" + id);
@@ -145,14 +145,15 @@ public class TcpClient {
         y=(sum%256)+1;
         c[6] = (byte) y;
         String cString= bytesToHexString(c);
-    
+        DataOutputStream out;
         try {
-            DataOutputStream out = new DataOutputStream(s.getOutputStream());
+            out = new DataOutputStream(s.getOutputStream());
             BufferedInputStream bis = new BufferedInputStream(s.getInputStream());
             DataInputStream ips = new DataInputStream(bis);
 
             out.write(b);
             out.flush();
+            System.out.println("命令已发送");
 
             byte[] bytes = new byte[1]; // 一次读取一个byte
             String ret = "";
@@ -179,7 +180,27 @@ public class TcpClient {
             }
         }catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("命令发送失败，重连中...");
+            getSocket(gloIpc);
+            try {
+                out = new DataOutputStream(s.getOutputStream());
+                out.write(b);
+                out.flush();
+            } catch (IOException e1) {
+                // 记录错误日志
+                System.err.println("发送数据失败: " + e.getMessage());
+                e1.printStackTrace();
+
+                // 这里可以选择关闭连接或重试
+                try {
+                    if (s != null && !s.isClosed()) {
+                        s.close();
+                    }
+                } catch (IOException closeEx) {
+                    System.err.println("关闭Socket失败: " + closeEx.getMessage());
+                }
+            }
         }finally {
 
             new Thread(){
@@ -246,7 +267,7 @@ public class TcpClient {
     }
 
     private void request(byte[] b) {
-        if( s == null || s.isClosed() || !s.isConnected()){
+        if( s == null || s.isClosed() || !s.isConnected() || !isSocketAlive(s)){
             getSocket(gloIpc);
         }
         int sum=0;
@@ -275,6 +296,15 @@ public class TcpClient {
             sb.append(hex);
         }
         return sb.toString();
+    }
+
+    private boolean isSocketAlive(Socket s) {
+        try {
+            s.sendUrgentData(0xFF); // 发送一个 OOB 字节测试
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
 }
