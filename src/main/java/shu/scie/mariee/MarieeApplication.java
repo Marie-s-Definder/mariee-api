@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
-//@EnableScheduling
+@EnableScheduling
 public class MarieeApplication {
 
     public static void main(String[] args) {
